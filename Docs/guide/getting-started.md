@@ -53,15 +53,15 @@ yay -S --needed base-devel cmake llvm22 clang22
 
 # 1. Go to the official LLVM releases page (https://github.com/llvm/llvm-project/releases/tag/llvmorg-22.1.8) and download the archive for version 22.1.8.
 
-# 2. Extract the downloaded archive and move its entire contents to `C:\\Program Files\\LLVM`.
+# 2. Extract the downloaded archive and move its entire contents to `C:\Program Files\LLVM`.
 
 
 
 # Ensure Visual Studio with "Desktop development with C++" is installed.
 
-# If LLVM is not in standard paths, set LLVM\_DIR environment variable:
+# If LLVM is not in standard paths, set LLVM_DIR environment variable:
 
-$env:LLVM\_DIR = "C:\\Program Files\\LLVM\\lib\\cmake\\llvm"
+$env:LLVM_DIR = "C:\Program Files\LLVM\lib\cmake\llvm"
 ```
 
 :::

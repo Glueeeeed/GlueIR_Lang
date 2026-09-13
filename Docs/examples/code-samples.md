@@ -114,3 +114,48 @@ func int main() {
     return 0;
 }
 ```
+
+
+## 5. Game (`game.glue`)
+
+Measures using if statements, while, functions with return values, and more for console game.
+
+```c
+func int generateRandomNumber(int a,int b) {
+    int number = random(a,b);
+    return number;
+}
+
+func int main() {
+    boolean isEnd = false;
+    int lives = 3;
+    int number = generateRandomNumber(1,50);
+
+    while(!isEnd) {
+
+        shout("Enter number: ");
+        int result = toInt(shin());
+
+        if (lives <= 0) {
+            shout("Game over!");
+            isEnd = true;
+        }
+
+        if (result == number) {
+            shout("Correct! Guessed number is ", result);
+            isEnd = true;
+        } else {
+            lives = lives - 1;
+
+            if (lives == 0) {
+              shout("Incorrect! Try again. You have last chance");
+            } else {
+              shout("Incorrect! Try again. You have ", lives , " lives");
+            }
+        }
+    }
+
+ 
+   return 0;
+}
+```
