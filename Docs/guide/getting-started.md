@@ -49,17 +49,19 @@ yay -S --needed base-devel cmake llvm22 clang22
 ```
 
 ```powershell [Windows]
-# Using winget (explicit version 22):
-winget install LLVM.LLVM --version 22.0.0
-winget install Kitware.CMake
+# Instead of package managers, download the files directly to ensure all required components are included:
 
-# Or using Chocolatey:
-choco install llvm --version=22.0.0
-choco install cmake
+# 1. Go to the official LLVM releases page (https://github.com/llvm/llvm-project/releases/tag/llvmorg-22.1.8) and download the archive for version 22.1.8.
+
+# 2. Extract the downloaded archive and move its entire contents to `C:\\Program Files\\LLVM`.
+
+
 
 # Ensure Visual Studio with "Desktop development with C++" is installed.
-# If LLVM is not in standard paths, set LLVM_DIR environment variable:
-# $env:LLVM_DIR = "C:\Program Files\LLVM\lib\cmake\llvm"
+
+# If LLVM is not in standard paths, set LLVM\_DIR environment variable:
+
+$env:LLVM\_DIR = "C:\\Program Files\\LLVM\\lib\\cmake\\llvm"
 ```
 
 :::
@@ -84,6 +86,20 @@ cd build
 cmake ..
 cmake --build . --config Release
 ```
+
+:::
+
+
+::: info
+ **Troubleshooting: LNK1181 Error (Windows)**
+
+*If you encounter a linker error stating that it cannot open `diaguids.lib` at a specific Visual Studio path `(for example: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\DIA SDK\lib\amd64\diaguids.lib)`, apply the following fix:*
+
+
+**Locate the File:** *Search your current Visual Studio installation directory to find the actual location of the `diaguids.lib` file.*
+
+
+**Recreate the Path:** *Manually create the missing folder structure* `(C:\Program Files\Microsoft Visual Studio\2022\Enterprise\DIA SDK\lib\amd64\)` *exactly as shown in the error message, and copy the `diaguids.lib` file into that directory to satisfy the linker path.*
 
 :::
 
