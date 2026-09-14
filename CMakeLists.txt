@@ -72,6 +72,7 @@ add_executable(glue
         src/semantic/scope.cpp
         src/semantic/scope.h
         src/parser/parser_utils.cpp
+        src/parser/parser_statements.cpp
 )
 
 target_include_directories(glue PRIVATE

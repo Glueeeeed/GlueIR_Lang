@@ -66,127 +66,20 @@ void Parser::parseFunctionDeclaration() {
 void Parser::parseStatement(ASTNode* parentBlock) {
     Token token = currentToken();
 
-
-
     if (token.type == TokenType::LBRACE) {
-        nextToken();
-        auto blockNode = std::make_unique<ASTNode>(NodeType::BLOCK);
-        while (currentToken().type != TokenType::RBRACE && currentToken().type != TokenType::END_OF_FILE) {
-            parseStatement(blockNode.get());
-        }
-        if (currentToken().type != TokenType::RBRACE) {
-            expect("Syntax Error: expected '}' to close block", currentToken().line, currentToken().column);
-        }
-        nextToken();
-        parentBlock->children.push_back(std::move(blockNode));
-        return;
-    }
-
-    if (token.type == TokenType::KEYWORD && token.value == "return") {
-        int retLine = token.line;
-        int retCol = token.column;
-        nextToken();
-
-        auto retNode = std::make_unique<ASTNode>(NodeType::RETURN_STATEMENT, "", false, false, false, retLine, retCol);
-
-        if (currentToken().type != TokenType::SEMICOLON) {
-            retNode->children.push_back(parseExpression());
-        }
-
-        if (currentToken().type != TokenType::SEMICOLON) {
-            expect("Syntax Error: expected ';' after return statement", currentToken().line, currentToken().column);
-        }
-        nextToken();
-
-        parentBlock->children.push_back(std::move(retNode));
+        parseBlockStatement(parentBlock);
+    } else if (token.type == TokenType::KEYWORD && token.value == "return") {
+        parseReturnStatement(parentBlock, token);
     } else if (token.type == TokenType::TYPE || (token.type == TokenType::KEYWORD && (token.value == "const" || token.value == "sticky"))) {
-        parentBlock->children.push_back(parseDeclaration());
-        if (currentToken().type != TokenType::SEMICOLON) {
-            expect("Syntax Error: expected ';' after declaration", currentToken().line, currentToken().column);
-        }
-        nextToken();
+        parseDeclarationStatement(parentBlock);
     } else if (token.type == TokenType::IDENTIFIER) {
-        if (peekToken().type == TokenType::EQUALS) {
-            parentBlock->children.push_back(parseAssign());
-        } else if (peekToken().type == TokenType::LPAREN) {
-            parentBlock->children.push_back(parseFunctionCall());
-            if (currentToken().type != TokenType::SEMICOLON) {
-                expect("Syntax Error: expected ';' after function call", currentToken().line, currentToken().column);
-            }
-            nextToken();
-        } else {
-            expect("Syntax Error: unexpected identifier in statement context", token.line, token.column);
-        }
-    } else if (token.type == TokenType::KEYWORD && (token.value == "Shout" || token.value == "shout")) {
-        parentBlock->children.push_back(parseFunctionCall());
-        if (currentToken().type != TokenType::SEMICOLON) {
-            expect("Syntax Error: expected ';' after shout call", currentToken().line, currentToken().column);
-        }
-        nextToken();
+        parseIdentifierStatement(parentBlock, token);
     } else if (token.type == TokenType::KEYWORD && token.value == "if") {
-
-        int ifLine = token.line;
-        int ifCol = token.column;
-        nextToken();
-
-        if (currentToken().type != TokenType::LPAREN) {
-            expect("Syntax Error: expected '(' after 'if'", currentToken().line, currentToken().column);
-        }
-        nextToken();
-
-        auto condition = parseExpression();
-
-        if (currentToken().type != TokenType::RPAREN) {
-            expect("Syntax Error: expected ')' after 'if' condition", currentToken().line, currentToken().column);
-        }
-        nextToken();
-
-        auto ifNode = std::make_unique<ASTNode>(NodeType::IF_STATEMENT, "", false, false, false, ifLine, ifCol);
-        ifNode->children.push_back(std::move(condition));
-
-        auto thenBlock = std::make_unique<ASTNode>(NodeType::BLOCK);
-        parseStatement(thenBlock.get());
-        ifNode->children.push_back(std::move(thenBlock));
-
-        if (currentToken().type == TokenType::KEYWORD && currentToken().value == "else") {
-            nextToken();
-            auto elseBlock = std::make_unique<ASTNode>(NodeType::BLOCK);
-            parseStatement(elseBlock.get());
-            ifNode->children.push_back(std::move(elseBlock));
-        }
-
-        parentBlock->children.push_back(std::move(ifNode));
-    }  else if (token.type == TokenType::KEYWORD && token.value == "while") {
-        int whileLine = token.line;
-        int whileCol = token.column;
-        nextToken();
-
-        if (currentToken().type != TokenType::LPAREN) {
-            expect("Syntax Error: expected '(' after 'while'", currentToken().line, currentToken().column);
-        }
-        nextToken();
-
-        auto condition = parseExpression();
-
-        if (currentToken().type != TokenType::RPAREN) {
-            expect("Syntax Error: expected ')' after 'while' condition", currentToken().line, currentToken().column);
-        }
-        nextToken();
-
-        auto whileNode = std::make_unique<ASTNode>(NodeType::WHILE_STATEMENT, "", false, false, false, whileLine, whileCol);
-        whileNode->children.push_back(std::move(condition));
-
-        auto bodyBlock = std::make_unique<ASTNode>(NodeType::BLOCK);
-        parseStatement(bodyBlock.get());
-        whileNode->children.push_back(std::move(bodyBlock));
-
-        parentBlock->children.push_back(std::move(whileNode));
-    }  else if (token.type == TokenType::KEYWORD && (token.value == "shout" || token.value == "Shout" || token.value == "shin")) {
-        parentBlock->children.push_back(parseFunctionCall());
-        if (currentToken().type != TokenType::SEMICOLON) {
-            expect("Syntax Error: expected ';' after function call", currentToken().line, currentToken().column);
-        }
-        nextToken();
+        parseIfStatement(parentBlock, token);
+    } else if (token.type == TokenType::KEYWORD && token.value == "while") {
+        parseWhileStatement(parentBlock, token);
+    } else if (token.type == TokenType::KEYWORD && (token.value == "shout" || token.value == "Shout" || token.value == "shin")) {
+        parseCallStatement(parentBlock);
     } else {
         expect("Syntax Error: unknown statement '" + token.value + "'", token.line, token.column);
     }
