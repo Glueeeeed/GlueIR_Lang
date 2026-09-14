@@ -44,6 +44,13 @@ std::unique_ptr<ASTNode> AST::makeType(const std::string &name, int line, int co
     return std::make_unique<ASTNode>(NodeType::TYPE, name, false, false, false, line, column);
 }
 
+std::unique_ptr<ASTNode> AST::makeParameter(const std::string& name, const std::string& type) {
+    auto pDecl = std::make_unique<ASTNode>(NodeType::PARAMETER, name);
+    pDecl->children.push_back(makeIdentifier(name));
+    pDecl->children.push_back(makeType(type));
+    return pDecl;
+}
+
 
 void AST::addChild(std::unique_ptr<ASTNode> child) {
     root->children.push_back(std::move(child));

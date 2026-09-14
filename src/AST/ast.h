@@ -59,6 +59,7 @@ class AST {
     std::unique_ptr<ASTNode> makeAny(const std::string& name, int line = 0, int column = 0);
 
 
+    std::unique_ptr<ASTNode> makeParameter(const std::string& name, const std::string& type);
     std::unique_ptr<ASTNode> makeIdentifier(const std::string& name, int line = 0, int column = 0);
     std::unique_ptr<ASTNode> makeDeclaration(const std::string& name,  bool isConst, bool stickyUsed, bool isSticky, int line = 0, int column = 0);
     std::unique_ptr<ASTNode> makeType(const std::string& name, int line = 0, int column = 0);
@@ -68,6 +69,7 @@ class AST {
     void addDeclaration(const std::string& var, std::unique_ptr<ASTNode> expr, std::string type,  bool isConst = false, bool stickyUsed = false, bool isSticky = false, int line = 0, int column = 0);
     void addFunctionDefinition(std::string name, std::string returnType, std::unique_ptr<ASTNode> params, std::unique_ptr<ASTNode> body);
     void addFunctionArgument(std::unique_ptr<ASTNode> arg);
+
 
     void addFunctionCall(std::string &name, std::vector<std::unique_ptr<ASTNode>> args);
 

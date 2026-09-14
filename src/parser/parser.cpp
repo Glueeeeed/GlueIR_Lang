@@ -31,101 +31,32 @@ void Parser::parse() {
 void Parser::parseFunctionDeclaration() {
 
     nextToken();
+    std::pair<std::string, std::string> funcHeader = parseFunctionHeader();
+    std::string returnType = funcHeader.first;
+    std::string funcName = funcHeader.second;
 
-    Token typeOrIdToken = currentToken();
-    std::string returnType = "void";
-    std::string funcName;
-
-    if (typeOrIdToken.type == TokenType::TYPE) {
-        returnType = typeOrIdToken.value;
-        nextToken();
-
-        Token idToken = currentToken();
-        if (idToken.type != TokenType::IDENTIFIER) {
-            expect("Syntax Error: expected function name", idToken.line, idToken.column);
-        }
-        funcName = idToken.value;
-    } else if (typeOrIdToken.type == TokenType::IDENTIFIER) {
-        returnType = "void";
-        funcName = typeOrIdToken.value;
-    } else {
-        expect("Syntax Error: expected return type or function name after 'func'", typeOrIdToken.line, typeOrIdToken.column);
-    }
-
-
-    if (funcName == "Main") {
-        funcName = "main";
-    }
-
+    funcName = funcName == "Main" ? "main" : funcName;
     nextToken();
 
-    if (currentToken().type != TokenType::LPAREN) {
-        expect("Syntax Error: expected '(' after function name", currentToken().line, currentToken().column);
-    }
-    nextToken();
+    consume(TokenType::LPAREN, "expected '(' after function name");
 
-    std::vector<std::pair<std::string, std::string>> params;
+    std::vector<std::pair<std::string, std::string>> params = parse_args();
 
-    if (currentToken().type != TokenType::RPAREN) {
-        while (true) {
-            if (currentToken().type != TokenType::TYPE) {
-                expect("Syntax Error: expected parameter type", currentToken().line, currentToken().column);
-            }
-            std::string paramType = currentToken().value;
-            nextToken();
+    consume(TokenType::RPAREN, "expected ')' after function arguments");
 
-            if (currentToken().type != TokenType::IDENTIFIER) {
-                expect("Syntax Error: expected parameter name", currentToken().line, currentToken().column);
-            }
-            std::string paramName = currentToken().value;
-            int pLine = currentToken().line;
-            int pCol = currentToken().column;
-            nextToken();
-
-            params.push_back({paramType, paramName});
-
-            if (currentToken().type == TokenType::COMMA) {
-                nextToken();
-            } else if (currentToken().type == TokenType::RPAREN) {
-                break;
-            } else {
-                expect("Syntax Error: expected ',' or ')' in parameter list", currentToken().line, currentToken().column);
-            }
-        }
-    }
-
-
-    if (currentToken().type != TokenType::RPAREN) {
-        expect("Syntax Error: expected ')' after function arguments", currentToken().line, currentToken().column);
-    }
-    nextToken();
-
-
-    if (currentToken().type != TokenType::LBRACE) {
-        expect("Syntax Error: expected '{' to start function body", currentToken().line, currentToken().column);
-    }
-    nextToken();
+    consume(TokenType::LBRACE, "expected '{' to start function body");
 
     auto body = std::make_unique<ASTNode>(NodeType::BLOCK);
 
     while (currentToken().type != TokenType::RBRACE && currentToken().type != TokenType::END_OF_FILE) {
         parseStatement(body.get());
     }
-
-    if (currentToken().type != TokenType::RBRACE) {
-        expect("Syntax Error: expected '}' at the end of function", currentToken().line, currentToken().column);
-    }
-    nextToken();
-
+    consume(TokenType::RBRACE, "expected '}' at the end of function");
 
     auto paramsNode = std::make_unique<ASTNode>(NodeType::BLOCK);
     for (const auto& [pType, pName] : params) {
-        auto pDecl = std::make_unique<ASTNode>(NodeType::PARAMETER, pName);
-        pDecl->children.push_back(ast.makeIdentifier(pName));
-        pDecl->children.push_back(ast.makeType(pType));
-        paramsNode->children.push_back(std::move(pDecl));
+        paramsNode->children.push_back(ast.makeParameter(pName, pType));
     }
-
 
     ast.addFunctionDefinition(funcName, returnType, std::move(paramsNode), std::move(body));
 }

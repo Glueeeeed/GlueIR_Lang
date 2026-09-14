@@ -46,6 +46,10 @@ class Parser {
         static void expect(std::string msg,  int line = 0, int column = 0);
         void printASTCall();
 
+        // UTILS
+        std::vector<std::pair<std::string, std::string>>  parse_args();
+        void consume(TokenType expectedType, const std::string& errMsg);
+        std::pair<std::string, std::string> parseFunctionHeader();
 
 };
 
