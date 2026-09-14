@@ -1,20 +1,20 @@
 # Code Samples
 
-This section contains working code examples illustrating various features and idioms in the Glue programming language.
+This section contains working code examples illustrating various features and idioms in the GlueIR programming language.
 
 ---
 
-## 1. Complete Application (`hello.glue`)
+## 1. Complete Application (`hello.glueir`)
 
 Demonstrates functions, `const` and `sticky` variables, loop iterations, and multi-argument `shout` logging.
 
 ```c
 /*g
-  Hello World and feature demo in Glue
+  Hello World and feature demo in GlueIR
 g*/
 
 func string getGreeting() {
-    return "Hello from Glue Language!";
+    return "Hello from GlueIR Language!";
 }
 
 func printDivider() {
@@ -48,7 +48,7 @@ func int main() {
 
 ---
 
-## 2. Sticky Variable Mutability (`sticky.glue`)
+## 2. Sticky Variable Mutability (`sticky.glueir`)
 
 Demonstrates how `sticky` variables permit exactly one reassignment after declaration.
 
@@ -70,7 +70,7 @@ func int main() {
 
 ---
 
-## 3. Mathematical Operations & Comparisons (`expressions.glue`)
+## 3. Mathematical Operations & Comparisons (`expressions.glueir`)
 
 Demonstrates operator precedence, boolean comparisons, and type promotion.
 
@@ -97,7 +97,7 @@ func int main() {
 
 ---
 
-## 4. Benchmark Loop (`bench.glue`)
+## 4. Benchmark Loop (`bench.glueir`)
 
 Measures high-iteration loop performance compiled natively via LLVM.
 
@@ -116,7 +116,7 @@ func int main() {
 ```
 
 
-## 5. Game (`game.glue`)
+## 5. Game (`game.glueir`)
 
 Measures using if statements, while, functions with return values, and more for console game.
 

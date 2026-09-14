@@ -1,21 +1,21 @@
 # Syntax, Types & Mutability
 
-Glue is a statically and strongly typed language with an emphasis on explicit variable mutability and clear syntax.
+GlueIR is a statically and strongly typed language with an emphasis on explicit variable mutability and clear syntax.
 
 ---
 
 ## Comments
 
-Glue supports both single-line comments and distinctive block comments:
+GlueIR supports both single-line comments and distinctive block comments:
 
 - **Single-line comment**: Begins with `//` and continues to the end of the line.
-- **Glue block comment**: Begins with `/*g` and ends with `g*/`.
+- **GlueIR block comment**: Begins with `/*g` and ends with `g*/`.
 
 ```c
 // This is a standard single-line comment
 
 /*g
-  This is a Glue block comment.
+  This is a GlueIR block comment.
   It can span multiple lines.
 g*/
 ```
@@ -24,7 +24,7 @@ g*/
 
 ## Data Types
 
-Glue provides fundamental primitive types mapped directly to native LLVM representations:
+GlueIR provides fundamental primitive types mapped directly to native LLVM representations:
 
 | Type | LLVM Equivalent | Description | Example Literal |
 | :--- | :--- | :--- | :--- |
@@ -42,9 +42,9 @@ Floating-point numbers with a trailing `f` (e.g. `10.5f`) are parsed as `float`.
 
 ## Variable Declarations & Mutability Modifiers
 
-Glue introduces three tiers of variable mutability:
+GlueIR introduces three tiers of variable mutability:
 
-### 1. Standard Mutable Variables
+### 1. Standard-Mutable Variables
 Declared with `<type> <identifier> = <expression>;`. Can be reassigned arbitrarily many times.
 
 ```c

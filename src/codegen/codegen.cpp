@@ -606,18 +606,20 @@ llvm::Value* CodeGenerator::visitExpression(const ASTNode *node) {
 
 void CodeGenerator::save() {
     std::error_code EC;
-    llvm::raw_fd_ostream out("glue.ll", EC);
+    llvm::raw_fd_ostream out("gir.ll", EC);
     module->print(out, nullptr);
     run();
 }
 
 void CodeGenerator::run() {
 #if defined(_WIN32) || defined(_WIN64)
-    system("clang glue.ll -o glue_program.exe && glue_program.exe");
+    system("clang -O2 gir.ll -o glue_program.exe && glue_program.exe");
+    system("rm gir.ll");
 #else
-    system("clang glue.ll -o glue_program && ./glue_program");
+    system("clang -O2 gir.ll -o glue_program && ./glue_program");
+    system("rm gir.ll");
 #endif
-    // system("clang glue.ll -o glue_bench"); // BENCHMARKS
+    // system("clang gir.ll -o glue_bench"); // BENCHMARKS
 
 }
 

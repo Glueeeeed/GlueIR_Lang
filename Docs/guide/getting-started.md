@@ -1,20 +1,20 @@
 # Getting Started with Glue
 
-Welcome to **Glue** is a minimalist, statically typed procedural programming language that compiles directly to native binaries via LLVM.
+Welcome to **GlueIR** is a minimalist, statically typed procedural programming language that compiles directly to native binaries via LLVM.
 
-This guide walks you through installing dependencies, building the Glue compiler from source, and compiling your first program on **Linux**, **macOS**, and **Windows**.
+This guide walks you through installing dependencies, building the GlueIR compiler from source, and compiling your first program on **Linux**, **macOS**, and **Windows**.
 
 ---
 
 ## System Requirements
 
-To build the Glue compiler, ensure you have the following installed on your machine:
+To build the GlueIR compiler, ensure you have the following installed on your machine:
 - **C++ Compiler**: Supporting `C++20` standard (GCC 11+, Clang 13+, or MSVC 2019/2022)
 - **CMake**: Version `3.20` or higher
 - **LLVM & Clang**: Developer libraries, headers, and `clang` (LLVM 22 required)
 
 ::: warning
-LLVM 22 is required for all features and optimizations in Glue.
+LLVM 22 is required for all features and optimizations in GlueIR.
 Versions newer than 22 may be incompatible because LLVM drastically changes its API with each new version.
 :::
 
@@ -109,11 +109,11 @@ Upon a successful build, the `glue` (or `glue.exe` on Windows) compiler executab
 
 ## Your First Glue Program
 
-Create a source file named `main.glue`:
+Create a source file named `main.glueir`:
 
 ```c
 func int main() {
-    shout("Hello from Glue!");
+    shout("Hello from GlueIR!");
     return 0;
 }
 ```
@@ -125,11 +125,11 @@ Invoke the compiler by passing your source file:
 ::: code-group
 
 ```bash [Linux / macOS]
-./glue main.glue
+./glue main.glueir
 ```
-
+w
 ```powershell [Windows]
-.\glue.exe main.glue
+.\glue.exe main.glueir
 ```
 
 :::
@@ -138,6 +138,6 @@ Invoke the compiler by passing your source file:
 What happens under the hood?
 1. The lexer and parser generate and validate the Abstract Syntax Tree (AST).
 2. The semantic analyzer enforces types and mutability invariants.
-3. The LLVM code generator emits Intermediate Representation into `glue.ll` tailored for the host target.
+3. The LLVM code generator emits Intermediate Representation into `gir.ll` tailored for the host target.
 4. The compiler invokes `clang` to produce the native executable (`glue_program` or `glue_program.exe`) and runs it.
 :::

@@ -2,9 +2,9 @@
 layout: home
 
 hero:
-  name: "Glue"
-  text: "A Minimalist, Native Compiled Language"
-  tagline: "High performance AOT compilation via LLVM with expressive mutability modifiers and a streamlined syntax."
+  name: "GlueIR Lang"
+  text: "A Minimalist, procedural compiled Language"
+  tagline: "High performance AOT compilation via LLVM with a streamlined syntax."
   actions:
     - theme: brand
       text: Get Started →
