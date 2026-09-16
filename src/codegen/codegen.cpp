@@ -614,7 +614,7 @@ void CodeGenerator::save() {
 void CodeGenerator::run() {
 #if defined(_WIN32) || defined(_WIN64)
 
-    // temporary solotion
+    // temporary solution
 
     system("clang -O2 gir.ll -o glue_program.exe -llegacy_stdio_definitions");
     system("glue_program.exe");
