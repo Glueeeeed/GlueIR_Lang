@@ -1,8 +1,8 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: "Glue Lang",
-  description: "Documentation for Glue, a minimalist native programming language based on LLVM",
+  title: "GlueIR Lang",
+  description: "Documentation for GlueIR, a minimalist, procedural programming language based on LLVM",
   lang: 'en-US',
 
   themeConfig: {
@@ -21,7 +21,7 @@ export default defineConfig({
             { text: 'Getting Started & Installation', link: '/guide/getting-started' },
             { text: 'Syntax, Types & Mutability', link: '/guide/syntax-and-types' },
             { text: 'Control Flow & Conditions', link: '/guide/control-flow' },
-            { text: 'Functions & I/O (shout)', link: '/guide/functions-and-io' }
+            { text: 'Functions & I/O', link: '/guide/functions-and-io' }
           ]
         }
       ],
@@ -44,7 +44,7 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/glueeeeed/glue' }
+      { icon: 'github', link: 'https://github.com/glueeeeed/GlueIR_Lang' }
     ],
 
     footer: {

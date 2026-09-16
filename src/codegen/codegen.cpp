@@ -613,8 +613,12 @@ void CodeGenerator::save() {
 
 void CodeGenerator::run() {
 #if defined(_WIN32) || defined(_WIN64)
-    system("clang -O2 gir.ll -o glue_program.exe && glue_program.exe");
-    system("rm gir.ll");
+
+    // temporary solotion
+
+    system("clang -O2 gir.ll -o glue_program.exe -llegacy_stdio_definitions");
+    system("glue_program.exe");
+    system("del gir.ll");
 #else
     system("clang -O2 gir.ll -o glue_program && ./glue_program");
     system("rm gir.ll");
