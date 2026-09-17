@@ -244,24 +244,14 @@ std::unique_ptr<ASTNode> Parser::parseMultiplication() {
 std::unique_ptr<ASTNode> Parser::parseAssign() {
     Token idToken = currentToken();
     std::string identifier = idToken.value;
-    if (idToken.type != TokenType::IDENTIFIER) {
-        expect("Syntax Error: expected an identifier before '" + idToken.value + "'", idToken.line, idToken.column);
-    }
-    nextToken();
 
-    Token eqToken = currentToken();
-    if (eqToken.type != TokenType::EQUALS) {
-        expect("Syntax Error: expected '=' after identifier '" + identifier + "'", eqToken.line, eqToken.column);
-    }
-    nextToken();
+    consume(TokenType::IDENTIFIER, "Syntax Error: expected an identifier before '");
+
+    consume(TokenType::EQUALS, "Syntax Error: expected '=' after identifier '" + identifier + "'");
 
     auto expr = parseExpression();
 
-    if (currentToken().type != TokenType::SEMICOLON) {
-        expect("Syntax Error: expected ';' after assignment to '" + identifier + "'", currentToken().line,
-               currentToken().column);
-    }
-    nextToken();
+    consume(TokenType::SEMICOLON, "Syntax Error: expected ';' after assignment to '" + identifier + "'");
 
     auto assign = std::make_unique<ASTNode>(NodeType::ASSIGNMENT, "", false, false, false, idToken.line, idToken.column);
     assign->children.push_back(ast.makeIdentifier(identifier, idToken.line, idToken.column));
