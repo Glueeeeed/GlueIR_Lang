@@ -3,7 +3,7 @@
 #include "scope.h"
 #include <sstream>
 
-std::string nodeTypeToString(NodeType t) {
+std::string SemanticAnalyzer::nodeTypeToString(NodeType t) {
     switch (t) {
         case NodeType::NUMBER: return "'int'";
         case NodeType::NUMBER_DOUBLE: return "'double'";
@@ -23,16 +23,7 @@ void SemanticAnalyzer::visit(const ASTNode* node) {
     if (!node) return;
     switch (node->type) {
         case NodeType::PROGRAM: {
-            bool hasMain = false;
-            for (const auto& child : node->children) {
-                if (child->type == NodeType::FUNCTION_DECLARATION && (child->value == "main" || child->value == "Main")) {
-                    hasMain = true;
-                }
-                visit(child.get());
-            }
-            if (!hasMain) {
-                expect("Compile Error: Program must contain a 'main' function");
-            }
+            visitProgram(node);
             break;
         }
         case NodeType::FUNCTION_DECLARATION:
@@ -59,42 +50,15 @@ void SemanticAnalyzer::visit(const ASTNode* node) {
             }
             break;
         case NodeType::RETURN_STATEMENT: {
-            if (currentFunctionReturnType == "void") {
-                if (!node->children.empty()) {
-                    expect("Compile Error: Function '" + currentFunctionName + "' with return type 'void' cannot return a value", node->line, node->column);
-                }
-            } else {
-                if (node->children.empty()) {
-                    expect("Compile Error: Function '" + currentFunctionName + "' with return type '" + currentFunctionReturnType + "' must return a value", node->line, node->column);
-                } else {
-                    NodeType retType = inferType(node->children[0].get());
-                    if (!isCompatible(currentFunctionReturnType, retType)) {
-                        expect("Compile Error: Function '" + currentFunctionName + "' with return type '" + currentFunctionReturnType + "' cannot return value of type " + nodeTypeToString(retType), node->line, node->column);
-                    }
-                }
-            }
+            visitReturn(node);
             break;
         }
         case NodeType::IF_STATEMENT: {
-            NodeType condType = inferType(node->children[0].get());
-            if (condType != NodeType::BOOLEAN && condType != NodeType::NUMBER && condType != NodeType::NUMBER_DOUBLE && condType != NodeType::NUMBER_FLOAT) {
-                expect("Compile Error: If statement condition must be of type boolean or number", node->line, node->column);
-            }
-
-            visit(node->children[1].get());
-
-            if (node->children.size() > 2) {
-                visit(node->children[2].get());
-            }
+            visitIf(node);
             break;
         }
         case NodeType::WHILE_STATEMENT: {
-            NodeType condType = inferType(node->children[0].get());
-            if (condType != NodeType::BOOLEAN && condType != NodeType::NUMBER && condType != NodeType::NUMBER_DOUBLE && condType != NodeType::NUMBER_FLOAT) {
-                expect("Compile Error: While loop condition must be of type boolean or number", node->line, node->column);
-            }
-
-            visit(node->children[1].get());
+            visitWhile(node);
             break;
         }
         default:
@@ -129,70 +93,61 @@ void SemanticAnalyzer::visitDeclaration(const ASTNode* node) {
 
 
 NodeType SemanticAnalyzer::inferType(const ASTNode* node) {
+    if (!node) return NodeType::BOND;
 
-    if (node->type == NodeType::FUNCTION_CALL) {
-        visitFunctionCall(node);
+    switch (node->type) {
+        case NodeType::FUNCTION_CALL: {
+            visitFunctionCall(node);
 
-        if (node->value == "shin" || node->value == "listen" || node->value == "input") return NodeType::STRING;
-        if (node->value == "toInt" || node->value == "random") return NodeType::NUMBER;
-        if (node->value == "toDouble") return NodeType::NUMBER_DOUBLE;
-        if (node->value == "toFloat") return NodeType::NUMBER_FLOAT;
+            static const std::unordered_map<std::string_view, NodeType> builtins = {
+                {"shin", NodeType::STRING},{"toInt", NodeType::NUMBER}, {"random", NodeType::NUMBER},
+                {"toDouble", NodeType::NUMBER_DOUBLE},
+                {"toFloat", NodeType::NUMBER_FLOAT}
+            };
 
-        SymbolInfo* info = symbolTable.lookup(node->value);
-        if (info) {
-            if (info->type == "int") return NodeType::NUMBER;
-            if (info->type == "double") return NodeType::NUMBER_DOUBLE;
-            if (info->type == "float") return NodeType::NUMBER_FLOAT;
-            if (info->type == "string") return NodeType::STRING;
-            if (info->type == "bool" || info->type == "boolean") return NodeType::BOOLEAN;
-        }
-
-        expect("Compile Error: undefined function '" + node->value + "'", node->line, node->column);
-        return NodeType::BOND;
-    }
-
-    if (node->type == NodeType::BINARY_OPERATION) {
-        NodeType leftType = inferType(node->children[0].get());
-        NodeType rightType = inferType(node->children[1].get());
-
-        if (leftType == NodeType::STRING || rightType == NodeType::STRING) {
-            std::string errorMsg = "Compile Error: Operator '" + node->value +
-                                   "' is not supported for type 'string'";
-            expect(errorMsg, node->line, node->column);
-        }
-        if (node->value == "/") {
-            if (node->children[1]->type == NodeType::NUMBER || node->children[1]->type == NodeType::NUMBER_DOUBLE || node->children[1]->type == NodeType::NUMBER_FLOAT) {
-                double val = std::stod(node->children[1]->value);
-                if (val == 0.0) {
-                    expect("Compile Error: Division by zero", node->line, node->column);
-                }
+            if (auto it = builtins.find(node->value); it != builtins.end()) {
+                return it->second;
             }
+
+            if (SymbolInfo* info = symbolTable.lookup(node->value)) {
+                return mapStringToNodeType(info->type);
+            }
+
+            expect("Compile Error: undefined function '" + node->value + "'", node->line, node->column);
+            return NodeType::BOND;
         }
 
+        case NodeType::BINARY_OPERATION: {
+            NodeType leftType = inferType(node->children[0].get());
+            NodeType rightType = inferType(node->children[1].get());
 
+            if (leftType == NodeType::STRING || rightType == NodeType::STRING) {
+                expect("Compile Error: Operator '" + node->value + "' is not supported for type 'string'", node->line, node->column);
+            }
 
-        if (leftType == NodeType::NUMBER_DOUBLE || rightType == NodeType::NUMBER_DOUBLE) return NodeType::NUMBER_DOUBLE;
-        if (leftType == NodeType::NUMBER_FLOAT || rightType == NodeType::NUMBER_FLOAT) return NodeType::NUMBER_FLOAT;
+            if (node->value == "/") {
+                checkDivisionByZero(node->children[1].get(), node->line, node->column);
+            }
 
-        return NodeType::NUMBER;
-    }
+            if (leftType == NodeType::NUMBER_DOUBLE || rightType == NodeType::NUMBER_DOUBLE) return NodeType::NUMBER_DOUBLE;
+            if (leftType == NodeType::NUMBER_FLOAT || rightType == NodeType::NUMBER_FLOAT) return NodeType::NUMBER_FLOAT;
 
-    if (node->type == NodeType::IDENTIFIER) {
-        SymbolInfo* info = symbolTable.lookup(node->value);
-        if (info) {
-            if (info->type == "int") return NodeType::NUMBER;
-            if (info->type == "double") return NodeType::NUMBER_DOUBLE;
-            if (info->type == "float") return NodeType::NUMBER_FLOAT;
-            if (info->type == "string") return NodeType::STRING;
-            if (info->type == "bond") return NodeType::BOND;
-            if (info->type == "bool" || info->type == "boolean") return NodeType::BOOLEAN;
+            return NodeType::NUMBER;
         }
-        expect("Compile Error: variable '" + node->value + "' is not declared in this scope", node->line, node->column);
-        return NodeType::BOND;
-    }
 
-    return node->type;
+        case NodeType::IDENTIFIER: {
+            if (SymbolInfo* info = symbolTable.lookup(node->value)) {
+                return mapStringToNodeType(info->type);
+            }
+            expect("Compile Error: variable '" + node->value + "' is not declared in this scope", node->line, node->column);
+            return NodeType::BOND;
+        }
+
+        default:
+            return node->type;
+    }
 }
+
 
 bool SemanticAnalyzer::isCompatible(const std::string& declaredType, NodeType valueType) {
 
@@ -274,23 +229,14 @@ void SemanticAnalyzer::visitFunctionCall(const ASTNode* node) {
 
 
     if (funcName == "random") {
-        if (node->children.size() != 2) {
-            expect("Compile Error: function '" + funcName + "' expects 2 arguments, but " + std::to_string(node->children.size()) + " were provided", node->line, node->column);
-            return;
-        }
+        if (node->children.size() != 2) expect("Compile Error: function '" + funcName + "' expects 2 arguments, but " + std::to_string(node->children.size()) + " were provided", node->line, node->column);
     }
 
-    if (funcName == "shout" || funcName == "shin"  || funcName == "random" || funcName == "toInt" || funcName == "toFloat" || funcName == "toDouble" ) {
-        return;
-    }
-
-
+    if (funcName == "shout" || funcName == "shin"  || funcName == "random" || funcName == "toInt" || funcName == "toFloat" || funcName == "toDouble" ) return;
 
     SymbolInfo* info = symbolTable.lookup(funcName);
-    if (!info) {
-        expect("Compile Error: function '" + funcName + "' is not declared", node->line, node->column);
-        return;
-    }
+    if (!info) expect("Compile Error: function '" + funcName + "' is not declared", node->line, node->column);
+
 
     if (node->children.size() != info->args.size()) {
         expect("Compile Error: function '" + funcName + "' expects " + std::to_string(info->args.size()) +
@@ -312,65 +258,48 @@ void SemanticAnalyzer::visitFunctionCall(const ASTNode* node) {
 }
 
 void SemanticAnalyzer::visitFunctionDeclaration(const ASTNode* node) {
-    std::string funcName = node->value;
-    std::string returnType = node->children[0]->value;
-    currentFunctionReturnType = returnType;
+    const std::string& funcName = node->value;
+    const std::string& returnType = node->children[0]->value;
+
     currentFunctionName = funcName;
+    currentFunctionReturnType = returnType;
 
     SymbolInfo info;
     info.type = returnType;
 
-    if (node->children.size() > 2) {
-        const ASTNode* paramsNode = node->children[1].get();
+    const ASTNode* paramsNode = (node->children.size() > 2) ? node->children[1].get() : nullptr;
+
+    if (paramsNode) {
         for (const auto& paramNode : paramsNode->children) {
-            std::string paramType = paramNode->children[1]->value; // children[1] to TYPE
-            info.args.push_back(paramType);
+            info.args.push_back(paramNode->children[1]->value); // paramType
         }
     }
 
     symbolTable.declare(funcName, info);
 
     const ASTNode* bodyNode = node->children.back().get();
+    bool isMain = (funcName == "main" || funcName == "Main");
+    bool hasReturnAtEnd = hasEndingReturn(bodyNode);
 
-    if (returnType != "void") {
-        bool endsWithReturn = false;
-        if (bodyNode && bodyNode->type == NodeType::BLOCK) {
-            if (!bodyNode->children.empty() && bodyNode->children.back()->type == NodeType::RETURN_STATEMENT) {
-                endsWithReturn = true;
-            }
-        }
-        if (!endsWithReturn) {
-            expect("Compile Error: Function '" + funcName + "' with return type '" + returnType + "' must return a value", node->line, node->column);
-        }
-    }
-
-    if (node->value == "main" || node->value == "Main") {
+    if (isMain) {
         if (returnType != "int") {
             expect("Compile Error: 'main' function must return type 'int'", node->line, node->column);
         }
-        bool endsWithReturn = false;
-        if (bodyNode && bodyNode->type == NodeType::BLOCK) {
-            if (!bodyNode->children.empty() && bodyNode->children.back()->type == NodeType::RETURN_STATEMENT) {
-                endsWithReturn = true;
-            }
-        }
-        if (!endsWithReturn) {
+        if (!hasReturnAtEnd) {
             expect("Compile Error: Function 'main' must end with a return statement (e.g., return 0;)", node->line, node->column);
         }
+    } else if (returnType != "void" && !hasReturnAtEnd) {
+        expect("Compile Error: Function '" + funcName + "' with return type '" + returnType + "' must return a value", node->line, node->column);
     }
 
     symbolTable.enterScope();
 
-    if (node->children.size() > 2) {
-        const ASTNode* paramsNode = node->children[1].get();
+    if (paramsNode) {
         for (const auto& param : paramsNode->children) {
-            std::string paramName = param->children[0]->value;
-            std::string paramType = param->children[1]->value;
+            const std::string& paramName = param->children[0]->value;
+            const std::string& paramType = param->children[1]->value;
 
-            SymbolInfo paramInfo;
-            paramInfo.type = paramType;
-            paramInfo.isConst = false;
-            paramInfo.isSticky = false;
+            SymbolInfo paramInfo{paramType, {}, false, false};
 
             if (!symbolTable.declare(paramName, paramInfo)) {
                 expect("Compile Error: redeclaration of parameter '" + paramName + "'", param->line, param->column);

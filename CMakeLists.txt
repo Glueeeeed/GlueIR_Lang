@@ -74,6 +74,7 @@ add_executable(glue
         src/parser/parser_utils.cpp
         src/parser/parser_statements.cpp
         src/parser/parser_literals.cpp
+        src/semantic/semantic_utils.cpp
 )
 
 target_include_directories(glue PRIVATE
