@@ -88,85 +88,47 @@ void Parser::parseStatement(ASTNode* parentBlock) {
 std::unique_ptr<ASTNode> Parser::parseLiteral() {
     Token token = currentToken();
 
-
-    if (token.type == TokenType::IDENTIFIER || (token.type == TokenType::KEYWORD && peekToken().type == TokenType::LPAREN)) {
-        if (peekToken().type == TokenType::LPAREN) {
-            return parseFunctionCall();
-        }
-        auto node = ast.makeIdentifier(token.value, token.line, token.column);
+    if (token.type == TokenType::IDENTIFIER || token.type == TokenType::KEYWORD) {
+        if (peekToken().type == TokenType::LPAREN) return parseFunctionCall();
+        if (token.type == TokenType::KEYWORD) goto error;
         nextToken();
-        return node;
+        return ast.makeIdentifier(token.value, token.line, token.column);
     }
 
-    if (token.type == TokenType::MINUS) {
+    if (token.type == TokenType::MINUS || token.type == TokenType::NOT || token.type == TokenType::PLUS) {
         nextToken();
         auto operand = parseLiteral();
-        auto zeroNode = ast.makeNumber("0", token.line, token.column);
-        return ast.makeBinaryOp("-", std::move(zeroNode), std::move(operand), token.line, token.column);
+        if (token.type == TokenType::PLUS) return operand;
+
+        bool isMinus = (token.type == TokenType::MINUS);
+        auto dummy = isMinus ? ast.makeNumber("0", token.line, token.column)
+                             : ast.makeBool("false", token.line, token.column);
+
+        return isMinus ? ast.makeBinaryOp("-", std::move(dummy), std::move(operand), token.line, token.column)
+                       : ast.makeBinaryOp("==", std::move(operand), std::move(dummy), token.line, token.column);
     }
 
-    if (token.type == TokenType::NOT) {
-        nextToken();
-        auto operand = parseLiteral();
-        auto falseNode = ast.makeBool("false", token.line, token.column);
-        return ast.makeBinaryOp("==", std::move(operand), std::move(falseNode), token.line, token.column);
-    }
+    nextToken();
+    switch (token.type) {
+        case TokenType::NUMBER:        return ast.makeNumber(token.value, token.line, token.column);
+        case TokenType::NUMBER_DOUBLE: return ast.makeDouble(token.value, token.line, token.column);
+        case TokenType::NUMBER_FLOAT:  return ast.makeFloat(token.value, token.line, token.column);
+        case TokenType::STRING:        return ast.makeString(token.value, token.line, token.column);
+        case TokenType::BOOLEAN_TRUE:
+        case TokenType::BOOLEAN_FALSE: return ast.makeBool(token.value, token.line, token.column);
 
-    if (token.type == TokenType::PLUS) {
-        nextToken();
-        return parseLiteral();
-    }
-
-
-    if (token.type == TokenType::NUMBER) {
-        auto node = ast.makeNumber(token.value, token.line, token.column);
-        nextToken();
-        return node;
-    }
-
-    if (token.type == TokenType::NUMBER_DOUBLE) {
-        auto node = ast.makeDouble(token.value, token.line, token.column);
-        nextToken();
-        return node;
-    }
-
-    if (token.type == TokenType::NUMBER_FLOAT) {
-        auto node = ast.makeFloat(token.value, token.line, token.column);
-        nextToken();
-        return node;
-    }
-
-    if (token.type == TokenType::STRING) {
-        auto node = ast.makeString(token.value, token.line, token.column);
-        nextToken();
-        return node;
-    }
-
-    if (token.type == TokenType::BOOLEAN_TRUE || token.type == TokenType::BOOLEAN_FALSE) {
-        auto node = ast.makeBool(token.value, token.line, token.column);
-        nextToken();
-        return node;
-    }
-
-    if (token.type == TokenType::IDENTIFIER) {
-        if (peekToken().type == TokenType::LPAREN) {
-            return parseFunctionCall();
+        case TokenType::LPAREN: {
+            auto node = parseExpression();
+            if (currentToken().type != TokenType::RPAREN) {
+                expect("Syntax Error: expected ')'", currentToken().line, currentToken().column);
+            }
+            nextToken();
+            return node;
         }
-        auto node = ast.makeIdentifier(token.value, token.line, token.column);
-        nextToken();
-        return node;
+        default: break;
     }
 
-    if (token.type == TokenType::LPAREN) {
-        nextToken();
-        auto node = parseExpression();
-        if (currentToken().type != TokenType::RPAREN) {
-            expect("Syntax Error: expected ')'", currentToken().line, currentToken().column);
-        }
-        nextToken();
-        return node;
-    }
-
+error:
     expect("Syntax Error: expected a literal or identifier", token.line, token.column);
     return nullptr;
 }
@@ -279,24 +241,14 @@ std::unique_ptr<ASTNode> Parser::parseDeclaration() {
 
     Token typeToken = currentToken();
     std::string type = typeToken.value;
-    if (typeToken.type != TokenType::TYPE) {
-        expect("Syntax Error: expected a type name (e.g., int, string) in declaration", typeToken.line,
-               typeToken.column);
-    }
-    nextToken();
+
+    consume(TokenType::TYPE, "Syntax Error: expected a type name (e.g., int, string) in declaration");
 
     Token idToken = currentToken();
     std::string identifier = idToken.value;
-    if (idToken.type != TokenType::IDENTIFIER) {
-        expect("Syntax Error: expected an identifier after type '" + type + "'", idToken.line, idToken.column);
-    }
-    nextToken();
+   consume(TokenType::IDENTIFIER, "Syntax Error: expected an identifier after type '" + type + "'");
 
-    if (currentToken().type != TokenType::EQUALS) {
-        expect("Syntax Error: expected '=' after identifier '" + identifier + "'", currentToken().line,
-               currentToken().column);
-    }
-    nextToken();
+   consume(TokenType::EQUALS, "Syntax Error: expected '=' after identifier '" + identifier + "'");
 
     auto expr = parseExpression();
     auto decl = std::make_unique<ASTNode>(NodeType::DECLARATION, "", isConstant, isSticky, stickyUsed, declLine, declCol);
@@ -316,10 +268,7 @@ std::unique_ptr<ASTNode> Parser::parseFunctionCall() {
     }
     nextToken();
 
-    if (currentToken().type != TokenType::LPAREN) {
-        expect("Syntax Error: expected '(' before function arguments", currentToken().line, currentToken().column);
-    }
-    nextToken();
+    consume(TokenType::LPAREN, "Syntax Error: expected '(' before function arguments");
 
     std::vector<std::unique_ptr<ASTNode>> args;
     if (currentToken().type != TokenType::RPAREN) {
@@ -338,10 +287,7 @@ std::unique_ptr<ASTNode> Parser::parseFunctionCall() {
         }
     }
     
-    if (currentToken().type != TokenType::RPAREN) {
-        expect("Syntax Error: expected ')' after function arguments", currentToken().line, currentToken().column);
-    }
-    nextToken();
+    consume(TokenType::RPAREN, "Syntax Error: expected ')' after function arguments");
 
 
     auto call = std::make_unique<ASTNode>(NodeType::FUNCTION_CALL, functionName, false, false, false, idToken.line, idToken.column);
