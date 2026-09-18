@@ -73,7 +73,6 @@ add_executable(glue
         src/semantic/scope.h
         src/parser/parser_utils.cpp
         src/parser/parser_statements.cpp
-        src/parser/parser_literals.cpp
         src/semantic/semantic_utils.cpp
 )
 
