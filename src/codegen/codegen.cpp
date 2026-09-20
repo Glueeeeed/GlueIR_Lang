@@ -95,20 +95,7 @@ void CodeGenerator::generate(const ASTNode *node) {
 
 
             if (paramsNode) {
-                size_t idx = 0;
-                for (auto& arg : func->args()) {
-                    const auto& param = paramsNode->children[idx++];
-                    std::string pName = param->children[0]->value;
-                    std::string pType = param->children[1]->value;
-
-                    arg.setName(pName);
-
-                    llvm::Type* argLLVMType = getLLVMType(pType);
-                    llvm::AllocaInst* allocaInst = createEntryAlloca(func, builder, argLLVMType, pName);
-                    builder.CreateStore(&arg, allocaInst);
-
-                    namedValuesStack.back()[pName] = { allocaInst, getNodeType(pType) };
-                }
+                visitParameters(paramsNode, func);
             }
 
             if (funcName == "main") {

@@ -51,6 +51,7 @@ class CodeGenerator {
 
     llvm::Type* getLLVMType(const std::string& typeName);
     NodeType getNodeType(const std::string& typeName);
+    void visitParameters(const ASTNode* paramsNode, llvm::Function *func);
     void generateSrandSeed();
 
 

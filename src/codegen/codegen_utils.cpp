@@ -27,3 +27,20 @@ void CodeGenerator::generateSrandSeed() {
     auto srandFunc = module->getOrInsertFunction("srand", llvm::FunctionType::get(builder.getVoidTy(), { builder.getInt32Ty() }, false));
     builder.CreateCall(srandFunc, { seedVal });
 }
+
+void CodeGenerator::visitParameters(const ASTNode* paramsNode,llvm::Function *func) {
+    size_t idx = 0;
+    for (auto& arg : func->args()) {
+         const auto& param = paramsNode->children[idx++];
+        std::string pName = param->children[0]->value;
+        std::string pType = param->children[1]->value;
+
+        arg.setName(pName);
+
+        llvm::Type* argLLVMType = getLLVMType(pType);
+        llvm::AllocaInst* allocaInst = createEntryAlloca(func, builder, argLLVMType, pName);
+        builder.CreateStore(&arg, allocaInst);
+
+        namedValuesStack.back()[pName] = { allocaInst, getNodeType(pType) };
+    }
+}
