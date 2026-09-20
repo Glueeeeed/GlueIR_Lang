@@ -1,0 +1,68 @@
+[
+{
+  "directory": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build",
+  "command": "/usr/bin/c++  -I/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src -I/opt/homebrew/Cellar/llvm@22/22.1.8/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64   -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O2 -o CMakeFiles/glue.dir/src/main.cpp.o -c /Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/main.cpp",
+  "file": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/main.cpp",
+  "output": "CMakeFiles/glue.dir/src/main.cpp.o"
+},
+{
+  "directory": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build",
+  "command": "/usr/bin/c++  -I/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src -I/opt/homebrew/Cellar/llvm@22/22.1.8/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64   -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O2 -o CMakeFiles/glue.dir/src/lexer/lexer.cpp.o -c /Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/lexer/lexer.cpp",
+  "file": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/lexer/lexer.cpp",
+  "output": "CMakeFiles/glue.dir/src/lexer/lexer.cpp.o"
+},
+{
+  "directory": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build",
+  "command": "/usr/bin/c++  -I/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src -I/opt/homebrew/Cellar/llvm@22/22.1.8/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64   -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O2 -o CMakeFiles/glue.dir/src/parser/parser.cpp.o -c /Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/parser/parser.cpp",
+  "file": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/parser/parser.cpp",
+  "output": "CMakeFiles/glue.dir/src/parser/parser.cpp.o"
+},
+{
+  "directory": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build",
+  "command": "/usr/bin/c++  -I/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src -I/opt/homebrew/Cellar/llvm@22/22.1.8/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64   -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O2 -o CMakeFiles/glue.dir/src/AST/AST.cpp.o -c /Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/AST/AST.cpp",
+  "file": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/AST/AST.cpp",
+  "output": "CMakeFiles/glue.dir/src/AST/AST.cpp.o"
+},
+{
+  "directory": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build",
+  "command": "/usr/bin/c++  -I/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src -I/opt/homebrew/Cellar/llvm@22/22.1.8/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64   -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O2 -o CMakeFiles/glue.dir/src/semantic/semantic.cpp.o -c /Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/semantic/semantic.cpp",
+  "file": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/semantic/semantic.cpp",
+  "output": "CMakeFiles/glue.dir/src/semantic/semantic.cpp.o"
+},
+{
+  "directory": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build",
+  "command": "/usr/bin/c++  -I/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src -I/opt/homebrew/Cellar/llvm@22/22.1.8/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64   -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O2 -o CMakeFiles/glue.dir/src/codegen/codegen.cpp.o -c /Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/codegen/codegen.cpp",
+  "file": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/codegen/codegen.cpp",
+  "output": "CMakeFiles/glue.dir/src/codegen/codegen.cpp.o"
+},
+{
+  "directory": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build",
+  "command": "/usr/bin/c++  -I/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src -I/opt/homebrew/Cellar/llvm@22/22.1.8/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64   -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O2 -o CMakeFiles/glue.dir/src/semantic/scope.cpp.o -c /Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/semantic/scope.cpp",
+  "file": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/semantic/scope.cpp",
+  "output": "CMakeFiles/glue.dir/src/semantic/scope.cpp.o"
+},
+{
+  "directory": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build",
+  "command": "/usr/bin/c++  -I/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src -I/opt/homebrew/Cellar/llvm@22/22.1.8/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64   -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O2 -o CMakeFiles/glue.dir/src/parser/parser_utils.cpp.o -c /Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/parser/parser_utils.cpp",
+  "file": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/parser/parser_utils.cpp",
+  "output": "CMakeFiles/glue.dir/src/parser/parser_utils.cpp.o"
+},
+{
+  "directory": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build",
+  "command": "/usr/bin/c++  -I/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src -I/opt/homebrew/Cellar/llvm@22/22.1.8/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64   -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O2 -o CMakeFiles/glue.dir/src/parser/parser_statements.cpp.o -c /Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/parser/parser_statements.cpp",
+  "file": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/parser/parser_statements.cpp",
+  "output": "CMakeFiles/glue.dir/src/parser/parser_statements.cpp.o"
+},
+{
+  "directory": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build",
+  "command": "/usr/bin/c++  -I/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src -I/opt/homebrew/Cellar/llvm@22/22.1.8/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64   -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O2 -o CMakeFiles/glue.dir/src/semantic/semantic_utils.cpp.o -c /Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/semantic/semantic_utils.cpp",
+  "file": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/semantic/semantic_utils.cpp",
+  "output": "CMakeFiles/glue.dir/src/semantic/semantic_utils.cpp.o"
+},
+{
+  "directory": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build",
+  "command": "/usr/bin/c++  -I/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src -I/opt/homebrew/Cellar/llvm@22/22.1.8/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64   -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O2 -o CMakeFiles/glue.dir/src/codegen/codegen_utils.cpp.o -c /Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/codegen/codegen_utils.cpp",
+  "file": "/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/src/codegen/codegen_utils.cpp",
+  "output": "CMakeFiles/glue.dir/src/codegen/codegen_utils.cpp.o"
+}
+]

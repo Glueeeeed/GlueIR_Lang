@@ -1,0 +1,8 @@
+/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build/CMakeFiles/intrinsics_gen.dir
+/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build/CMakeFiles/vt_gen.dir
+/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build/CMakeFiles/omp_gen.dir
+/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build/CMakeFiles/acc_gen.dir
+/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build/CMakeFiles/target_parser_gen.dir
+/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build/CMakeFiles/glue.dir
+/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build/CMakeFiles/edit_cache.dir
+/Users/glueeed/Desktop/glue-temp/GlueIR_Lang/build/CMakeFiles/rebuild_cache.dir
