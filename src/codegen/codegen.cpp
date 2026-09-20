@@ -87,12 +87,7 @@ void CodeGenerator::generate(const ASTNode *node) {
             // generate random seed for srand
 
             if (funcName == "main") {
-                auto timeFunc = module->getOrInsertFunction("time", llvm::FunctionType::get(builder.getInt64Ty(), { builder.getPtrTy() }, false));
-                llvm::Value* nullPtr = llvm::ConstantPointerNull::get(builder.getPtrTy());
-                llvm::Value* timeVal = builder.CreateCall(timeFunc, { nullPtr });
-                llvm::Value* seedVal = builder.CreateTrunc(timeVal, builder.getInt32Ty());
-                auto srandFunc = module->getOrInsertFunction("srand", llvm::FunctionType::get(builder.getVoidTy(), { builder.getInt32Ty() }, false));
-                builder.CreateCall(srandFunc, { seedVal });
+                generateSrandSeed();
             }
 
 

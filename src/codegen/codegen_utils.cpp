@@ -18,3 +18,12 @@ NodeType CodeGenerator::getNodeType(const std::string& typeName) {
      if (typeName == "string") return NodeType::STRING;
         return NodeType::BOND;
 }
+
+void CodeGenerator::generateSrandSeed() {
+    auto timeFunc = module->getOrInsertFunction("time", llvm::FunctionType::get(builder.getInt64Ty(), { builder.getPtrTy() }, false));
+    llvm::Value* nullPtr = llvm::ConstantPointerNull::get(builder.getPtrTy());
+    llvm::Value* timeVal = builder.CreateCall(timeFunc, { nullPtr });
+    llvm::Value* seedVal = builder.CreateTrunc(timeVal, builder.getInt32Ty());
+    auto srandFunc = module->getOrInsertFunction("srand", llvm::FunctionType::get(builder.getVoidTy(), { builder.getInt32Ty() }, false));
+    builder.CreateCall(srandFunc, { seedVal });
+}
