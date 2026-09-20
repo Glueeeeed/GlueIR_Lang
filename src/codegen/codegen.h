@@ -47,6 +47,13 @@ class CodeGenerator {
     }
 
 
+    // utils  
+
+    llvm::Type* getLLVMType(const std::string& typeName);
+    NodeType getNodeType(const std::string& typeName);
+
+
+
 
 public:
 

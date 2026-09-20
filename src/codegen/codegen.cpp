@@ -59,23 +59,7 @@ void CodeGenerator::generate(const ASTNode *node) {
                                          ? node->children[0]->value
                                          : "void";
 
-            auto getLLVMType = [&](const std::string& typeName) -> llvm::Type* {
-                if (typeName == "int") return builder.getInt32Ty();
-                if (typeName == "string") return builder.getPtrTy();
-                if (typeName == "bool" || typeName == "boolean") return builder.getInt1Ty();
-                if (typeName == "double") return builder.getDoubleTy();
-                if (typeName == "float") return builder.getFloatTy();
-                return builder.getVoidTy();
-            };
 
-            auto getNodeType = [&](const std::string& typeName) -> NodeType {
-                if (typeName == "int") return NodeType::NUMBER;
-                if (typeName == "double") return NodeType::NUMBER_DOUBLE;
-                if (typeName == "float") return NodeType::NUMBER_FLOAT;
-                if (typeName == "bool" || typeName == "boolean") return NodeType::BOOLEAN;
-                if (typeName == "string") return NodeType::STRING;
-                return NodeType::BOND;
-            };
 
             llvm::Type* retType = getLLVMType(returnTypeName);
 

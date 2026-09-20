@@ -18,8 +18,8 @@ if(APPLE)
         list(APPEND CMAKE_PREFIX_PATH "${HOMEBREW_LLVM_PREFIX}/lib/cmake/llvm" "${HOMEBREW_LLVM_PREFIX}")
     endif()
     list(APPEND CMAKE_PREFIX_PATH
-        "/opt/homebrew/opt/llvm/lib/cmake/llvm"
-        "/usr/local/opt/llvm/lib/cmake/llvm"
+        "/opt/homebrew/opt/llvm@22/lib/cmake/llvm"
+        "/usr/local/opt/llvm@22/lib/cmake/llvm"
         "/opt/local/libexec/llvm"
     )
 elseif(WIN32)
@@ -74,6 +74,7 @@ add_executable(glue
         src/parser/parser_utils.cpp
         src/parser/parser_statements.cpp
         src/semantic/semantic_utils.cpp
+        src/codegen/codegen_utils.cpp
 )
 
 target_include_directories(glue PRIVATE
