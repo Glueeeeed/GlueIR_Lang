@@ -191,7 +191,7 @@ std::unique_ptr<ASTNode> Parser::parseComparison() {
 std::unique_ptr<ASTNode> Parser::parseMultiplication() {
     auto left = parseLiteral();
 
-    while (currentToken().type == TokenType::MULTIPLY || currentToken().type == TokenType::DIVISION) {
+    while (currentToken().type == TokenType::MULTIPLY || currentToken().type == TokenType::DIVISION || currentToken().type == TokenType::MOD) {
         Token opToken = currentToken();
         nextToken();
 

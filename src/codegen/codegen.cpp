@@ -535,6 +535,8 @@ llvm::Value* CodeGenerator::visitExpression(const ASTNode *node) {
                 return builder.CreateAnd(L, R, "andtmp");
             } else if (node->value == "or") {
                 return builder.CreateOr(L, R, "ortmp");
+            } else if (node->value == "%") {
+                return builder.CreateSRem(L, R, "modtmp");
             }
         }
         case NodeType::BOOLEAN:
