@@ -129,6 +129,9 @@ NodeType SemanticAnalyzer::inferType(const ASTNode* node) {
                 checkDivisionByZero(node->children[1].get(), node->line, node->column);
             }
 
+
+            if (node->value == "==" || node->value == ">" || node->value == "<" || node->value == ">=" || node->value == "<=" || node->value == "!=") return NodeType::BOOLEAN;
+
             if (leftType == NodeType::NUMBER_DOUBLE || rightType == NodeType::NUMBER_DOUBLE) return NodeType::NUMBER_DOUBLE;
             if (leftType == NodeType::NUMBER_FLOAT || rightType == NodeType::NUMBER_FLOAT) return NodeType::NUMBER_FLOAT;
 
