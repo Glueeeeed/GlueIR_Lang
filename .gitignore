@@ -1,5 +1,5 @@
 build/
 .cache/
 cache/
-node-modules/
+node_modules/
 Examples/test.glueir

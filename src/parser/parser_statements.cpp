@@ -116,5 +116,25 @@ void Parser::parseCallStatement(ASTNode* parentBlock) {
 }
 
 
+void Parser::parseBreakStatement(ASTNode* parentBlock, const Token& token) {
+    int line = token.line;
+    int col = token.column;
+    nextToken();
+    consume(TokenType::SEMICOLON, "Syntax Error: expected ';' after '" + token.value + "'");
+
+    auto breakNode = std::make_unique<ASTNode>(NodeType::BREAK_STATEMENT, token.value, false, false, false, line, col);
+    parentBlock->children.push_back(std::move(breakNode));
+}
+
+void Parser::parseContinueStatement(ASTNode* parentBlock, const Token& token) {
+    int line = token.line;
+    int col = token.column;
+    nextToken();
+    consume(TokenType::SEMICOLON, "Syntax Error: expected ';' after '" + token.value + "'");
+
+    auto continueNode = std::make_unique<ASTNode>(NodeType::CONTINUE_STATEMENT, token.value, false, false, false, line, col);
+    parentBlock->children.push_back(std::move(continueNode));
+}
+
 
 

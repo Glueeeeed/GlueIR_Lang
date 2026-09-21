@@ -175,6 +175,24 @@ void CodeGenerator::generate(const ASTNode *node) {
         case NodeType::WHILE_STATEMENT:
             visitWhileStatement(node);
             break;
+        case NodeType::BREAK_STATEMENT: {
+            if (!loopStack.empty()) {
+                builder.CreateBr(loopStack.back().breakTarget);
+                llvm::Function* func = builder.GetInsertBlock()->getParent();
+                llvm::BasicBlock* deadBB = llvm::BasicBlock::Create(context, "after.break", func);
+                builder.SetInsertPoint(deadBB);
+            }
+            break;
+        }
+        case NodeType::CONTINUE_STATEMENT: {
+            if (!loopStack.empty()) {
+                builder.CreateBr(loopStack.back().continueTarget);
+                llvm::Function* func = builder.GetInsertBlock()->getParent();
+                llvm::BasicBlock* deadBB = llvm::BasicBlock::Create(context, "after.continue", func);
+                builder.SetInsertPoint(deadBB);
+            }
+            break;
+        }
         default:
             break;
     }
@@ -245,7 +263,10 @@ void CodeGenerator::visitWhileStatement(const ASTNode* node) {
 
     func->insert(func->end(), bodyBB);
     builder.SetInsertPoint(bodyBB);
+
+    loopStack.push_back({condBB, endBB});
     generate(node->children[1].get());
+    loopStack.pop_back();
 
     if (!builder.GetInsertBlock()->getTerminator()) {
         builder.CreateBr(condBB);

@@ -11,6 +11,8 @@ class SemanticAnalyzer {
     std::unordered_map<std::string, SymbolInfo> symbols;
     std::string currentFunctionReturnType;
     std::string currentFunctionName;
+    int loopDepth = 0;
+
 
 public:
     void analyse(const ASTNode* node);

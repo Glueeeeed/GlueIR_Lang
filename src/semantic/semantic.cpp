@@ -61,6 +61,18 @@ void SemanticAnalyzer::visit(const ASTNode* node) {
             visitWhile(node);
             break;
         }
+        case NodeType::CONTINUE_STATEMENT: {
+            if (loopDepth == 0) {
+                expect("Compile Error: '" + node->value + "' statement can only be used inside a loop", node->line, node->column);
+            }
+            break;
+        }
+        case NodeType::BREAK_STATEMENT: {
+            if (loopDepth == 0) {
+                expect("Compile Error: '" + node->value + "' statement can only be used inside a loop", node->line, node->column);
+            }
+            break;
+        }
         default:
             break;
     }

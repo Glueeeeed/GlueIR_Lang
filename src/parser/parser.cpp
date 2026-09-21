@@ -80,6 +80,10 @@ void Parser::parseStatement(ASTNode* parentBlock) {
         parseWhileStatement(parentBlock, token);
     } else if (token.type == TokenType::KEYWORD && (token.value == "shout" || token.value == "Shout" || token.value == "shin")) {
         parseCallStatement(parentBlock);
+    } else if (token.type == TokenType::KEYWORD && token.value == "fin") {
+        parseBreakStatement(parentBlock, token);
+    } else if (token.type == TokenType::KEYWORD && token.value == "sigue") {
+        parseContinueStatement(parentBlock, token);
     } else {
         expect("Syntax Error: unknown statement '" + token.value + "'", token.line, token.column);
     }

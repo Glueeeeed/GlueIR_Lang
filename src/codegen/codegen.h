@@ -16,9 +16,15 @@ struct namedValuesStruct {
 };
 
 
+struct LoopContext {
+    llvm::BasicBlock* continueTarget;
+    llvm::BasicBlock* breakTarget;
+};
+
 class CodeGenerator {
 
     std::vector<std::unordered_map<std::string, namedValuesStruct>> namedValuesStack;
+    std::vector<LoopContext> loopStack;
 
     llvm::LLVMContext &context;
     std::unique_ptr<llvm::Module> module;
