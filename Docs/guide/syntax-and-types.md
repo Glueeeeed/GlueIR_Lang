@@ -73,6 +73,14 @@ appStatus = "ready"; // OK: first reassignment allowed
 
 ---
 
+::: warning Sticky Limitations
+
+** Sticky is not allowed in while statement**
+
+Sticky variables is not allowed in `while` statement. Declaration and asignment sticky variables in while statement results in an error.
+
+:::
+
 ##  Declaration Limitations
 
 ::: warning Important Limitations
