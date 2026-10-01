@@ -227,6 +227,11 @@ void SemanticAnalyzer::visitAssignment(const ASTNode* node) {
     }
 
     if (info->isSticky) {
+
+        if (isWhile) {
+            expect("Compile Error: cannot use 'sticky' variable in while statement", idNode->line, idNode->column);
+        }
+
         if (info->stickyUsed) {
             expect("Compile Error: variable '" + varName + "' is 'sticky' and has already been reassigned once", idNode->line, idNode->column);
         } else {
@@ -295,6 +300,7 @@ void SemanticAnalyzer::visitFunctionDeclaration(const ASTNode* node) {
     const ASTNode* bodyNode = node->children.back().get();
     bool isMain = (funcName == "main" || funcName == "Main");
     bool hasReturnAtEnd = hasEndingReturn(bodyNode);
+
 
     if (isMain) {
         if (returnType != "int") {

@@ -12,6 +12,7 @@ class SemanticAnalyzer {
     std::string currentFunctionReturnType;
     std::string currentFunctionName;
     int loopDepth = 0;
+    int isWhile = 0;
 
 
 public:

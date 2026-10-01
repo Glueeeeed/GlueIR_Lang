@@ -74,6 +74,7 @@ void SemanticAnalyzer::visitIf(const ASTNode* node) {
 }
 
 void SemanticAnalyzer::visitWhile(const ASTNode* node) {
+    isWhile = 1;
     NodeType condType = inferType(node->children[0].get());
     if (condType != NodeType::BOOLEAN && condType != NodeType::NUMBER && condType != NodeType::NUMBER_DOUBLE && condType != NodeType::NUMBER_FLOAT) {
         expect("Compile Error: While loop condition must be of type boolean or number", node->line, node->column);
@@ -82,6 +83,7 @@ void SemanticAnalyzer::visitWhile(const ASTNode* node) {
     loopDepth++;
     visit(node->children[1].get());
     loopDepth--;
+    isWhile = 0;
 }
 
 bool SemanticAnalyzer::hasEndingReturn(const ASTNode* bodyNode) const {
