@@ -31,6 +31,7 @@ public:
 
     std::string nodeTypeToString(NodeType t);
     NodeType mapStringToNodeType(std::string_view typeStr) const;
+    bool isExprNullable(const ASTNode* node);
     bool hasEndingReturn(const ASTNode* bodyNode) const;
     void checkDivisionByZero(const ASTNode* rightChild, int line, int column);
     void visitProgram(const ASTNode* node);

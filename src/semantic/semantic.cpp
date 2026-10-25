@@ -88,6 +88,7 @@ void SemanticAnalyzer::visitDeclaration(const ASTNode* node) {
     std::string varTypeFormatted = "'" + typeNode->value + "'";
     std::string varType = typeNode->value;
     NodeType valueType = inferType(valNode);
+    bool valueIsNullable = isExprNullable(valNode);
 
     if (!isCompatible(varType, valueType)) {
         expect("Compile Error: type mismatch; cannot assign " + nodeTypeToString(valueType) + " to variable '" + varName + "' of type " + varTypeFormatted, valNode->line, valNode->column);
@@ -100,8 +101,8 @@ void SemanticAnalyzer::visitDeclaration(const ASTNode* node) {
     info.stickyUsed = idNode->stickyUsed;
     info.isNullable = idNode->isNullable;
 
-    if (!info.isNullable && valueType == NodeType::NULO) {
-        expect("Compile Error: cannot assign nulo to non-nulo variable '" + varName + "'", valNode->line, valNode->column);
+    if (!info.isNullable && valueIsNullable) {
+        expect("Compile Error: cannot assign nullable value to non-nullable variable '" + varName + "' of type " + varTypeFormatted, valNode->line, valNode->column);
     }
 
     if (!symbolTable.declare(varName, info)) {
@@ -136,8 +137,19 @@ NodeType SemanticAnalyzer::inferType(const ASTNode* node) {
         }
 
         case NodeType::BINARY_OPERATION: {
-            NodeType leftType = inferType(node->children[0].get());
-            NodeType rightType = inferType(node->children[1].get());
+
+            const ASTNode* leftNode = node->children[0].get();
+            const ASTNode* rightNode = node->children[1].get();
+
+
+            NodeType leftType = inferType(leftNode);
+            NodeType rightType = inferType(rightNode);
+
+            if (node->value != "==" && node->value != "!=" && node->value != "??") {
+                if (isExprNullable(leftNode) || isExprNullable(rightNode)) {
+                    expect("Compile Error: arithmetic/logical operator '" + node->value + "' cannot be applied to non-nulo types", node->line, node->column);
+                }
+            }
 
             if (leftType == NodeType::STRING || rightType == NodeType::STRING) {
                 expect("Compile Error: Operator '" + node->value + "' is not supported for type 'string'", node->line, node->column);
@@ -223,6 +235,8 @@ void SemanticAnalyzer::visitAssignment(const ASTNode* node) {
     const ASTNode* valNode = node->children[1].get();
     std::string varName = idNode->value;
     NodeType valueType = inferType(valNode);
+    bool valueIsNullable = isExprNullable(valNode);
+
 
     SymbolInfo* info = symbolTable.lookup(varName);
     if (!info) {
@@ -251,7 +265,7 @@ void SemanticAnalyzer::visitAssignment(const ASTNode* node) {
     }
 
 
-    if (!info->isNullable && valueType == NodeType::NULO) {
+    if (!info->isNullable && valueIsNullable) {
         expect("Compile Error: cannot assign nulo to non-nulo variable '" + varName + "'", valNode->line, valNode->column);
     }
 }

@@ -16,7 +16,6 @@ void CodeGenerator::generateCode(const ASTNode *node) {
     
     save();
 }
-
 void CodeGenerator::enterScope() {
     namedValuesStack.emplace_back();
 }

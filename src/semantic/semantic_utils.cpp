@@ -18,6 +18,42 @@ NodeType SemanticAnalyzer::mapStringToNodeType(std::string_view typeStr) const {
     return NodeType::BOND;
 }
 
+bool SemanticAnalyzer::isExprNullable(const ASTNode* node) {
+    if (!node) return false;
+
+    switch (node->type) {
+        case NodeType::NULO:
+            return true;
+
+        case NodeType::IDENTIFIER: {
+            SymbolInfo* info = symbolTable.lookup(node->value);
+            if (info) {
+                return info->isNullable;
+            }
+            return false;
+        }
+
+        case NodeType::FUNCTION_CALL: {
+            SymbolInfo* info = symbolTable.lookup(node->value);
+            if (info) {
+                return info->isNullable;
+            }
+            return false;
+        }
+
+        case NodeType::BINARY_OPERATION: {
+            if (node->value == "??") {
+                return isExprNullable(node->children[1].get());
+            }
+            return false;
+        }
+
+        default:
+            return false;
+    }
+}
+
+
 void SemanticAnalyzer::checkDivisionByZero(const ASTNode* rightChild, int line, int column) {
     if (!rightChild) return;
 
