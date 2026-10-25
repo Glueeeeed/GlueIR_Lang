@@ -25,6 +25,7 @@ enum class NodeType {
     NUMBER,
     NUMBER_DOUBLE,
     NUMBER_FLOAT,
+    NULO,
     BOND,
     BOOLEAN,
     TYPE,
@@ -37,12 +38,13 @@ struct ASTNode {
     bool isConst;
     bool isSticky;
     bool stickyUsed;
+    bool isNullable;
     int line;
     int column;
     std::vector<std::unique_ptr<ASTNode>> children;
 
-    explicit ASTNode(NodeType t, std::string v = "", bool isconst = false, bool IsSticky = false, bool StickyUsed = false, int l = 0, int c = 0)
-        : type(t), isConst(isconst) , isSticky(IsSticky), stickyUsed(StickyUsed) , value(std::move(v)), line(l), column(c) {}
+    explicit ASTNode(NodeType t, std::string v = "", bool isconst = false, bool IsSticky = false, bool StickyUsed = false, bool isNullable = false, int l = 0, int c = 0)
+        : type(t), isConst(isconst) , isSticky(IsSticky), stickyUsed(StickyUsed) , isNullable(isNullable), value(std::move(v)), line(l), column(c) {}
 
 
 };
@@ -58,17 +60,17 @@ class AST {
     std::unique_ptr<ASTNode> makeDouble(const std::string& value1, int line = 0, int column = 0);
     std::unique_ptr<ASTNode> makeFloat(const std::string& value1, int line = 0, int column = 0);
     std::unique_ptr<ASTNode> makeBool(const std::string& name, int line = 0, int column = 0);
-    std::unique_ptr<ASTNode> makeAny(const std::string& name, int line = 0, int column = 0);
+    std::unique_ptr<ASTNode> makeNulo(const std::string& name, int line = 0, int column = 0);
 
 
     std::unique_ptr<ASTNode> makeParameter(const std::string& name, const std::string& type);
     std::unique_ptr<ASTNode> makeIdentifier(const std::string& name, int line = 0, int column = 0);
-    std::unique_ptr<ASTNode> makeDeclaration(const std::string& name,  bool isConst, bool stickyUsed, bool isSticky, int line = 0, int column = 0);
+    std::unique_ptr<ASTNode> makeDeclaration(const std::string& name,  bool isConst, bool stickyUsed, bool isSticky, bool isNullable, int line = 0, int column = 0);
     std::unique_ptr<ASTNode> makeType(const std::string& name, int line = 0, int column = 0);
     std::unique_ptr<ASTNode> makeBinaryOp(const std::string& op, std::unique_ptr<ASTNode> left, std::unique_ptr<ASTNode> right, int line = 0, int column = 0);
     void addChild(std::unique_ptr<ASTNode> child);
     void addAssignment(const std::string& var, std::unique_ptr<ASTNode> expr, int line = 0, int column = 0);
-    void addDeclaration(const std::string& var, std::unique_ptr<ASTNode> expr, std::string type,  bool isConst = false, bool stickyUsed = false, bool isSticky = false, int line = 0, int column = 0);
+    void addDeclaration(const std::string& var, std::unique_ptr<ASTNode> expr, std::string type,  bool isConst = false, bool stickyUsed = false, bool isSticky = false, bool isNullable = false, int line = 0, int column = 0);
     void addFunctionDefinition(std::string name, std::string returnType, std::unique_ptr<ASTNode> params, std::unique_ptr<ASTNode> body);
     void addFunctionArgument(std::unique_ptr<ASTNode> arg);
 

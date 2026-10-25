@@ -120,6 +120,7 @@ std::unique_ptr<ASTNode> Parser::parseLiteral() {
         case TokenType::STRING:        return ast.makeString(token.value, token.line, token.column);
         case TokenType::BOOLEAN_TRUE:
         case TokenType::BOOLEAN_FALSE: return ast.makeBool(token.value, token.line, token.column);
+        case TokenType::NULO: return ast.makeNulo(token.value, token.line, token.column);
 
         case TokenType::LPAREN: {
             auto node = parseExpression();
@@ -232,6 +233,7 @@ std::unique_ptr<ASTNode> Parser::parseDeclaration() {
     bool isConstant = false;
     bool isSticky = false;
     bool stickyUsed = false;
+    bool isNullable = false;
     int declLine = currentToken().line;
     int declCol = currentToken().column;
 
@@ -248,17 +250,34 @@ std::unique_ptr<ASTNode> Parser::parseDeclaration() {
 
     consume(TokenType::TYPE, "Syntax Error: expected a type name (e.g., int, string) in declaration");
 
+    if (currentToken().type == TokenType::QUESTION) {
+        isNullable = true;
+        nextToken();
+    }
+
     Token idToken = currentToken();
     std::string identifier = idToken.value;
-   consume(TokenType::IDENTIFIER, "Syntax Error: expected an identifier after type '" + type + "'");
+    consume(TokenType::IDENTIFIER, "Syntax Error: expected an identifier after type '" + type + "'");
 
-   consume(TokenType::EQUALS, "Syntax Error: expected '=' after identifier '" + identifier + "'");
+    std::unique_ptr<ASTNode> expr = nullptr;
 
-    auto expr = parseExpression();
-    auto decl = std::make_unique<ASTNode>(NodeType::DECLARATION, "", isConstant, isSticky, stickyUsed, declLine, declCol);
-    decl->children.push_back(ast.makeDeclaration(identifier, isConstant, stickyUsed, isSticky, idToken.line, idToken.column));
+    if (currentToken().type == TokenType::EQUALS) {
+        nextToken();
+        expr = parseExpression();
+    } else {
+        if (!isNullable) {
+            expect("Syntax Error: non-nulo variable '" + identifier + "' of type '" + type + "' must be initialized with '='",
+                   currentToken().line, currentToken().column);
+        }
+
+        expr = ast.makeNulo("nulo", idToken.line, idToken.column);
+    }
+
+    auto decl = std::make_unique<ASTNode>(NodeType::DECLARATION, "", isConstant, isSticky, stickyUsed, isNullable, declLine, declCol);
+    decl->children.push_back(ast.makeDeclaration(identifier, isConstant, stickyUsed, isSticky, isNullable, idToken.line, idToken.column));
     decl->children.push_back(ast.makeType(type, typeToken.line, typeToken.column));
     decl->children.push_back(std::move(expr));
+
     return decl;
 }
 

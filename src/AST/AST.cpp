@@ -6,42 +6,46 @@ void AST::startProgramTree() {
 }
 
 std::unique_ptr<ASTNode> AST::makeString(const std::string& value, int line, int column) {
-    return std::make_unique<ASTNode>(NodeType::STRING, value, false, false, false, line, column);
+    return std::make_unique<ASTNode>(NodeType::STRING, value, false, false, false, false, line, column);
 }
 
 std::unique_ptr<ASTNode> AST::makeNumber(const std::string& value1, int line, int column) {
-    return std::make_unique<ASTNode>(NodeType::NUMBER, value1, false, false, false, line, column);
+    return std::make_unique<ASTNode>(NodeType::NUMBER, value1, false, false, false, false, line, column);
 }
 
 std::unique_ptr<ASTNode> AST::makeDouble(const std::string& value1, int line, int column) {
-    return std::make_unique<ASTNode>(NodeType::NUMBER_DOUBLE, value1, false, false, false, line, column);
+    return std::make_unique<ASTNode>(NodeType::NUMBER_DOUBLE, value1, false, false, false, false, line, column);
 }
 
 std::unique_ptr<ASTNode> AST::makeBool(const std::string& value1, int line, int column) {
-    return std::make_unique<ASTNode>(NodeType::BOOLEAN, value1, false, false, false, line, column);
+    return std::make_unique<ASTNode>(NodeType::BOOLEAN, value1, false, false, false, false,line, column);
 }
 std::unique_ptr<ASTNode> AST::makeFloat(const std::string& value1, int line, int column) {
-    return std::make_unique<ASTNode>(NodeType::NUMBER_FLOAT, value1, false, false, false, line, column);
+    return std::make_unique<ASTNode>(NodeType::NUMBER_FLOAT, value1, false, false, false, false,line, column);
 }
 
 std::unique_ptr<ASTNode> AST::makeIdentifier(const std::string& name, int line, int column) {
-    return std::make_unique<ASTNode>(NodeType::IDENTIFIER, name, false, false, false, line, column);
+    return std::make_unique<ASTNode>(NodeType::IDENTIFIER, name, false, false, false, false,line, column);
 }
 
 
-std::unique_ptr<ASTNode> AST::makeDeclaration(const std::string& name, bool isConst, bool stickyUsed, bool isSticky, int line, int column ) {
-    return std::make_unique<ASTNode>(NodeType::IDENTIFIER, name, isConst, isSticky, stickyUsed, line, column);
+std::unique_ptr<ASTNode> AST::makeDeclaration(const std::string& name, bool isConst, bool stickyUsed, bool isSticky, bool isNullable, int line, int column ) {
+    return std::make_unique<ASTNode>(NodeType::IDENTIFIER, name, isConst, isSticky, stickyUsed, isNullable,line, column);
 }
 
 std::unique_ptr<ASTNode> AST::makeBinaryOp(const std::string& op, std::unique_ptr<ASTNode> left, std::unique_ptr<ASTNode> right, int line, int column) {
-    auto node = std::make_unique<ASTNode>(NodeType::BINARY_OPERATION, op, false, false, false, line, column);
+    auto node = std::make_unique<ASTNode>(NodeType::BINARY_OPERATION, op, false, false, false, false, line, column);
     node->children.push_back(std::move(left));
     node->children.push_back(std::move(right));
     return node;
 }
 
 std::unique_ptr<ASTNode> AST::makeType(const std::string &name, int line, int column) {
-    return std::make_unique<ASTNode>(NodeType::TYPE, name, false, false, false, line, column);
+    return std::make_unique<ASTNode>(NodeType::TYPE, name, false, false, false, false,line, column);
+}
+
+std::unique_ptr<ASTNode> AST::makeNulo(const std::string& name, int line, int column) {
+    return std::make_unique<ASTNode>(NodeType::NULO, name, false, false, false,  true,line, column);
 }
 
 std::unique_ptr<ASTNode> AST::makeParameter(const std::string& name, const std::string& type) {
@@ -57,14 +61,14 @@ void AST::addChild(std::unique_ptr<ASTNode> child) {
 }
 
 void AST::addAssignment(const std::string& var, std::unique_ptr<ASTNode> expr, int line, int column) {
-    auto assign = std::make_unique<ASTNode>(NodeType::ASSIGNMENT, "", false, false, false, line, column);
+    auto assign = std::make_unique<ASTNode>(NodeType::ASSIGNMENT, "", false, false, false, false, line, column);
     assign->children.push_back(makeIdentifier(var, line, column));
     assign->children.push_back(std::move(expr));
     addChild(std::move(assign));
 }
 
-void AST::addDeclaration(const std::string& var, std::unique_ptr<ASTNode> expr, std::string type, bool isConst, bool stickyUsed, bool isSticky, int line, int column) {
-    auto assign = std::make_unique<ASTNode>(NodeType::DECLARATION, "", false, false, false, line, column);
+void AST::addDeclaration(const std::string& var, std::unique_ptr<ASTNode> expr, std::string type, bool isConst, bool stickyUsed, bool isSticky, bool isNullable, int line, int column) {
+    auto assign = std::make_unique<ASTNode>(NodeType::DECLARATION, "", false, false, false, isNullable,line, column);
     assign->children.push_back(makeDeclaration(var, isConst,  stickyUsed,  isSticky, line, column));
     assign->children.push_back(makeType(type, line, column));
     assign->children.push_back(std::move(expr));
@@ -120,7 +124,7 @@ void AST::printAST(const ASTNode* node, int indent) {
         case NodeType::IF_STATEMENT: std::cout << "IF_STATEMENT"; break;
         case NodeType::BREAK_STATEMENT: std::cout << "BREAK_STATEMENT"; break;
         case NodeType::CONTINUE_STATEMENT: std::cout << "CONTINUE_STATEMENT"; break;
-        case NodeType::BOND: std::cout << "BOND"; break;
+        case NodeType::NULO: std::cout << "NULO"; break;
     }
 
     if (!node->value.empty())

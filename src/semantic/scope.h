@@ -10,6 +10,7 @@ struct SymbolInfo {
     std::vector<std::string> args;
     bool isConst = false;
     bool isSticky = false;
+    bool isNullable = false;
     std::string value;
     mutable bool stickyUsed = false;
 };

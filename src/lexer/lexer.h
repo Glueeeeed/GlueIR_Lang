@@ -12,9 +12,9 @@ enum struct TokenType {
 
     LPAREN, RPAREN, LBRACE, RBRACE,
 
-    DOT,SEMICOLON, COMMA, COLON,
+    DOT,SEMICOLON, COMMA, COLON, QUESTION,COALESCE,
 
-    STRING, NUMBER, NUMBER_FLOAT, NUMBER_DOUBLE, BOOLEAN_TRUE, BOOLEAN_FALSE,
+    STRING, NUMBER, NUMBER_FLOAT, NUMBER_DOUBLE, BOOLEAN_TRUE, BOOLEAN_FALSE, NULO,
 
     PLUS, MINUS, MULTIPLY,DIVISION,
 
@@ -53,6 +53,7 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
     {"continue", TokenType::KEYWORD},
     {"return", TokenType::KEYWORD},
     {"true", TokenType::BOOLEAN_TRUE},
+    {"nulo", TokenType::NULO},
     {"false", TokenType::BOOLEAN_FALSE},
     {"string", TokenType::TYPE},
     {"bool", TokenType::TYPE},

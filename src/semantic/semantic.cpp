@@ -9,8 +9,9 @@ std::string SemanticAnalyzer::nodeTypeToString(NodeType t) {
         case NodeType::NUMBER_DOUBLE: return "'double'";
         case NodeType::STRING: return "'string'";
         case NodeType::NUMBER_FLOAT : return "'float'";
-        case NodeType::BOND : return "'bond'";
+        case NodeType::NULO : return "'nulo'";
         case NodeType::BOOLEAN: return "'boolean'";
+
         default: return "unknown";
     }
 }
@@ -97,6 +98,11 @@ void SemanticAnalyzer::visitDeclaration(const ASTNode* node) {
     info.isConst = idNode->isConst;
     info.isSticky = idNode->isSticky;
     info.stickyUsed = idNode->stickyUsed;
+    info.isNullable = idNode->isNullable;
+
+    if (!info.isNullable && valueType == NodeType::NULO) {
+        expect("Compile Error: cannot assign nulo to non-nulo variable '" + varName + "'", valNode->line, valNode->column);
+    }
 
     if (!symbolTable.declare(varName, info)) {
         expect("Compile Error: variable '" + varName + "' is already declared in this scope", idNode->line, idNode->column);
@@ -166,19 +172,20 @@ NodeType SemanticAnalyzer::inferType(const ASTNode* node) {
 
 bool SemanticAnalyzer::isCompatible(const std::string& declaredType, NodeType valueType) {
 
-    if (declaredType == "int" && valueType == NodeType::NUMBER) {
+    if (declaredType == "int" && (valueType == NodeType::NUMBER || valueType == NodeType::NULO)) {
         return true;
     }
 
-    if (declaredType == "double" && (valueType == NodeType::NUMBER || valueType == NodeType::NUMBER_DOUBLE)) {
+
+    if (declaredType == "double" && (valueType == NodeType::NUMBER || valueType == NodeType::NUMBER_DOUBLE || valueType == NodeType::NULO)) {
         return true;
     }
 
-    if (declaredType == "string" && valueType == NodeType::STRING) {
+    if (declaredType == "string" && (valueType == NodeType::STRING || valueType == NodeType::NULO)) {
         return true;
     }
 
-    if (declaredType == "float" && valueType == NodeType::NUMBER_FLOAT) {
+    if (declaredType == "float" && (valueType == NodeType::NUMBER_FLOAT || valueType == NodeType::NULO)) {
         return true;
     }
 
@@ -241,6 +248,11 @@ void SemanticAnalyzer::visitAssignment(const ASTNode* node) {
 
     if (!isCompatible(info->type, valueType)) {
         expect("Compile Error: type mismatch; cannot assign " + nodeTypeToString(valueType) + " to variable '" + varName + "' of type '" + info->type + "'", valNode->line, valNode->column);
+    }
+
+
+    if (!info->isNullable && valueType == NodeType::NULO) {
+        expect("Compile Error: cannot assign nulo to non-nulo variable '" + varName + "'", valNode->line, valNode->column);
     }
 }
 
