@@ -1,0 +1,64 @@
+/*g
+  Nulo system in Glue
+
+  This example demonstrates how the Nulo system works.
+  Nulo is the equivalent of null in other programming languages.
+  The system is designed to be predictable and safe.
+
+g*/
+
+// ---------------------------------------------------------------------------
+// Rule 1: Regular variables CANNOT hold nulo.
+// Only special QPSN variables (Que Puede Ser Nulo) can hold nulo.
+// QPSN types are declared with a '?' suffix, e.g. int?, string?
+// ---------------------------------------------------------------------------
+
+// The following would cause a compile error:
+// int x = nulo;        // ERROR: regular int cannot be nulo
+// int y;               // ERROR: explicit value is required
+
+// Correct way: declare a QPSN variable
+// int? x;              // QPSN variable, can hold nulo
+// int? x = nulo;       // QPSN variable explicitly set to nulo
+
+// ---------------------------------------------------------------------------
+// Rule 2: Arithmetic operations are forbidden on QPSN variables.
+// You cannot multiply, add, subtract, or divide a QPSN variable directly.
+// ---------------------------------------------------------------------------
+
+// Example of what would cause a compile error:
+// int? a = nulo;
+// int b = a * 2;       // ERROR: cannot perform arithmetic on QPSN
+
+
+func int main() {
+
+
+    int? nullableValue = nulo;
+    int? nullableWithValue = 42;
+
+    string? nullableText = nulo;
+
+    shout("=== QPSN Variable Declarations ===");
+    shout("nullableValue: ", nullableValue);
+    shout("nullableWithValue: ", nullableWithValue);
+    shout("nullableText: ", nullableText);
+
+    
+    
+   //  Comparing with nulo
+
+    shout("");
+    shout("=== Comparing with Nulo ===");
+
+    if (nullableValue == nulo) {
+        shout("nullableValue is nulo (expected)");
+    }
+
+    if (nullableWithValue != nulo) {
+        shout("nullableWithValue is NOT nulo (expected)");
+    }
+
+    return 0;
+
+}

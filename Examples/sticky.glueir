@@ -1,13 +1,23 @@
+/*g
+  Sticky variables in Glue
+
+  This example demonstrates the 'sticky' modifier.
+  A sticky variable can be reassigned exactly once after its initial declaration.
+  Any further reassignment causes a compile error.
+g*/
+
 func int main() {
+
+    // Declare a sticky integer with an initial value
     sticky int port = 8080;
     shout("Initial port: ", port);
 
-    // First reassignment is permitted:
+    // First reassignment is permitted
     port = 9000;
     shout("Updated port: ", port);
 
-    // Uncommenting the following line will fail compilation:
-    // port = 9090; // Compile Error: variable 'port' is 'sticky' and has already been reassigned once
+    // A second reassignment is forbidden and will cause a compile error:
+    // port = 9090; // ERROR: variable 'port' is 'sticky' and has already been reassigned once
 
     return 0;
 }

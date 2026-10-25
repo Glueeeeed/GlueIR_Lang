@@ -1,16 +1,34 @@
-func int generateRandomNumber(int a,int b) {
-    int number = random(a,b);
+/*g
+  Number guessing game in Glue
+
+  This example demonstrates a simple game loop with user input.
+  The player has 3 lives to guess a random number between 1 and 50.
+  It uses random(), shin(), toInt(), and while loops.
+g*/
+
+// Generates a random number between a and b (inclusive)
+func int generateRandomNumber(int a, int b) {
+    int number = random(a, b);
     return number;
 }
 
 func int main() {
-    boolean isEnd = false;
-    int lives = 3;
-    int number = generateRandomNumber(1,50);
 
-    while(!isEnd) {
+    // Loop control flag
+    boolean isEnd = false;
+
+    // Player starts with 3 lives
+    int lives = 3;
+
+    // Pick a random number between 1 and 50
+    int number = generateRandomNumber(1, 50);
+
+    // Game loop — runs until the player wins or runs out of lives
+    while (!isEnd) {
 
         shout("Enter number: ");
+
+        // Read user input from stdin and convert to int
         int result = toInt(shin());
 
         if (lives <= 0) {
@@ -25,13 +43,12 @@ func int main() {
             lives = lives - 1;
 
             if (lives == 0) {
-              shout("Incorrect! Try again. You have last chance");
+                shout("Incorrect! Try again. You have last chance");
             } else {
-              shout("Incorrect! Try again. You have ", lives , " lives");
+                shout("Incorrect! Try again. You have ", lives, " lives");
             }
         }
     }
 
-
-   return 0;
+    return 0;
 }

@@ -1,5 +1,16 @@
+/*g
+  Performance benchmark in Glue
+
+  This example runs a simple loop to measure raw iteration speed.
+  It counts from 0 to 1 billion, demonstrating basic while-loop performance.
+g*/
+
 func int main() {
+
+    // Counter starts at 0
     int i = 0;
+
+    // Loop runs 1 billion times
     int max = 1000000000;
 
     while (i < max) {

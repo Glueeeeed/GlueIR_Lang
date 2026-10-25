@@ -1,29 +1,41 @@
 /*g
   Hello World and feature demo in Glue
+
+  This example demonstrates basic language features: functions, constants,
+  sticky variables, and while loops. It serves as a quick introduction to Glue.
 g*/
 
+// Returns a greeting string
 func string getGreeting() {
     return "Hello from Glue Language!";
 }
 
+// Prints a visual divider line
 func printDivider() {
     shout("---------------------------------");
 }
 
 func int main() {
+
+    // Calling helper functions
     printDivider();
     shout(getGreeting());
     printDivider();
 
+    // const - immutable value that cannot be changed after initialization
     const double PI = 3.14159;
+
+    // sticky - can be reassigned exactly once after initialization
     sticky string status = "initialized";
 
     shout("Math constant PI: ", PI);
     shout("Initial status: ", status);
 
+    // Reassigning the sticky variable (allowed once)
     status = "running";
     shout("Updated status: ", status);
 
+    // While loop with a counter
     int count = 0;
     while (count < 3) {
         shout("Iteration step: ", count);

@@ -1,12 +1,23 @@
+/*g
+  Expressions and type promotion in Glue
+
+  This example demonstrates arithmetic expressions and automatic type promotion.
+  When an int and double are combined, the result is automatically promoted to double.
+g*/
+
 func int main() {
+
+    // Integer and double operands
     int a = 10;
     int b = 20;
     double factor = 2.5;
 
-    // Automatic type promotion (int + double -> double)
+    // Automatic type promotion: int + int * double -> double
+    // Evaluation order: b * factor = 50.0, then a + 50.0 = 60.0
     double result = a + b * factor;
     shout("Calculated result: ", result);
 
+    // Comparison returns a bool
     bool isHigher = result > 50.0;
     if (isHigher == true) {
         shout("Result exceeds threshold.");
