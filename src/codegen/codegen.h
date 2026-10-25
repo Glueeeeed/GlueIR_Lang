@@ -13,6 +13,7 @@
 struct namedValuesStruct {
     llvm::AllocaInst* pointer;
     NodeType nodeType;
+    bool isNullable = false;
 };
 
 
@@ -55,7 +56,7 @@ class CodeGenerator {
 
     // utils  
 
-    llvm::Type* getLLVMType(const std::string& typeName);
+    llvm::Type* getLLVMType(const std::string& typeName, bool isNullable = false);
     NodeType getNodeType(const std::string& typeName);
     void visitParameters(const ASTNode* paramsNode, llvm::Function *func);
     void generateSrandSeed();

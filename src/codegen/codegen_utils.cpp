@@ -1,13 +1,19 @@
 #include "AST/ast.h"
 #include "codegen.h"
 
-llvm::Type* CodeGenerator::getLLVMType(const std::string& typeName) {
-     if (typeName == "int") return builder.getInt32Ty();
-     if (typeName == "string") return builder.getPtrTy();
-     if (typeName == "bool" || typeName == "boolean") return builder.getInt1Ty();
-     if (typeName == "double") return builder.getDoubleTy();
-     if (typeName == "float") return builder.getFloatTy();
-         return builder.getVoidTy();
+llvm::Type* CodeGenerator::getLLVMType(const std::string& typeName, bool isNullable) {
+    llvm::Type* baseType = nullptr;
+    if (typeName == "int") baseType = builder.getInt32Ty();
+    else if (typeName == "double") baseType = builder.getDoubleTy();
+    else if (typeName == "float") baseType = builder.getFloatTy();
+    else if (typeName == "bool" || typeName == "boolean") baseType = builder.getInt1Ty();
+    else if (typeName == "string") return builder.getPtrTy();
+    else baseType = builder.getVoidTy();
+
+    if (isNullable) {
+        return llvm::StructType::get(context, { builder.getInt1Ty(), baseType });
+    }
+    return baseType;
 }
 
 NodeType CodeGenerator::getNodeType(const std::string& typeName) {

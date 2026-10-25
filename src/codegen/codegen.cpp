@@ -276,65 +276,60 @@ void CodeGenerator::visitWhileStatement(const ASTNode* node) {
 }
 
 
-
 void CodeGenerator::visitDeclaration(const ASTNode *node) {
     const ASTNode* idNode   = node->children[0].get();
     const ASTNode* typeNode = node->children[1].get();
     const ASTNode* valNode  = node->children[2].get();
 
     std::string varName = idNode->value;
-    llvm::Value* val = visitExpression(valNode);
+    std::string typeName = typeNode->value;
+    bool isNullable = idNode->isNullable;
 
-    llvm::Type* ty = nullptr;
-    NodeType nt = NodeType::BOND;
-    if (typeNode->value == "int") {
-        ty = builder.getInt32Ty();
-        nt = NodeType::NUMBER;
-        if (val->getType()->isFloatingPointTy()) {
-            val = builder.CreateFPToSI(val, ty, "castit");
-        }
-    } else if (typeNode->value == "double") {
-        ty = builder.getDoubleTy();
-        nt = NodeType::NUMBER_DOUBLE;
-        if (!val->getType()->isDoubleTy()) {
-            if (val->getType()->isFloatingPointTy()) {
-                val = builder.CreateFPExt(val, ty, "castd");
-            } else {
-                val = builder.CreateSIToFP(val, ty, "castd");
+    llvm::Type* varType = getLLVMType(typeName, isNullable);
+    auto* allocaInst = createEntryAlloca(currentFunction, builder, varType, varName);
+
+    if (valNode->type == NodeType::NULO) {
+        llvm::Value* nullVal = llvm::Constant::getNullValue(varType);
+        builder.CreateStore(nullVal, allocaInst);
+    } else if (isNullable && typeName != "string") {
+        llvm::Value* rawVal = visitExpression(valNode);
+
+        if (rawVal->getType()->isStructTy()) {
+            builder.CreateStore(rawVal, allocaInst);
+        } else {
+            if (typeName == "int" && rawVal->getType()->isFloatingPointTy()) {
+                rawVal = builder.CreateFPToSI(rawVal, builder.getInt32Ty(), "castit");
+            } else if (typeName == "double" && !rawVal->getType()->isDoubleTy()) {
+                if (rawVal->getType()->isFloatingPointTy()) {
+                    rawVal = builder.CreateFPExt(rawVal, builder.getDoubleTy(), "castd");
+                } else {
+                    rawVal = builder.CreateSIToFP(rawVal, builder.getDoubleTy(), "castd");
+                }
+            } else if (typeName == "float" && !rawVal->getType()->isFloatTy()) {
+                if (rawVal->getType()->isFloatingPointTy()) {
+                    rawVal = builder.CreateFPTrunc(rawVal, builder.getFloatTy(), "castf");
+                } else {
+                    rawVal = builder.CreateSIToFP(rawVal, builder.getFloatTy(), "castf");
+                }
+            } else if ((typeName == "bool" || typeName == "boolean") && !rawVal->getType()->isIntegerTy(1)) {
+                rawVal = builder.CreateIsNotNull(rawVal, "boolcast");
             }
-        }
-    } else if (typeNode->value == "float") {
-        ty = builder.getFloatTy();
-        nt = NodeType::NUMBER_FLOAT;
-        if (!val->getType()->isFloatTy()) {
-            if (val->getType()->isFloatingPointTy()) {
-                val = builder.CreateFPTrunc(val, ty, "castf");
-            } else {
-                val = builder.CreateSIToFP(val, ty, "castf");
-            }
-        }
-    } else if (typeNode->value == "string") {
-        ty = builder.getPtrTy();
-        nt = NodeType::STRING;
-    } else if (typeNode->value == "bool" || typeNode->value == "boolean") {
-        ty = builder.getInt1Ty();
-        nt = NodeType::BOOLEAN;
-        if (val->getType()->isIntegerTy() && !val->getType()->isIntegerTy(1)) {
-            val = builder.CreateIsNotNull(val, "boolcast");
+
+            llvm::Value* structVal = llvm::UndefValue::get(varType);
+            structVal = builder.CreateInsertValue(structVal, builder.getInt1(true), 0);
+            structVal = builder.CreateInsertValue(structVal, rawVal, 1);
+            builder.CreateStore(structVal, allocaInst);
         }
     } else {
-        expect("Compile Error: unknown type '" + typeNode->value + "'");
-        return;
+        llvm::Value* rawVal = visitExpression(valNode);
+        builder.CreateStore(rawVal, allocaInst);
     }
-
-    auto* allocaInst = createEntryAlloca(currentFunction, builder, ty, varName);
-    builder.CreateStore(val, allocaInst);
-    
 
     if (!namedValuesStack.empty()) {
-        namedValuesStack.back()[varName] = { allocaInst, nt };
+        namedValuesStack.back()[varName] = { allocaInst, getNodeType(typeName), isNullable };
     }
 }
+
 void CodeGenerator::visitAssignment(const ASTNode *node) {
     const ASTNode* idNode   = node->children[0].get();
     const ASTNode* valNode  = node->children[1].get();
@@ -343,6 +338,61 @@ void CodeGenerator::visitAssignment(const ASTNode *node) {
     namedValuesStruct* var = lookupNamedValue(varName);
     if (!var) {
         expect("Compile Error: variable '" + varName + "' not found");
+        return;
+    }
+
+    if (var->isNullable && var->nodeType != NodeType::STRING) {
+        llvm::Type* varType = var->pointer->getAllocatedType();
+
+        if (valNode->type == NodeType::NULO) {
+            llvm::Value* nullVal = llvm::Constant::getNullValue(varType);
+            builder.CreateStore(nullVal, var->pointer);
+            return;
+        }
+
+        llvm::Value* val = visitExpression(valNode);
+
+        if (val->getType()->isStructTy()) {
+            builder.CreateStore(val, var->pointer);
+            return;
+        }
+
+        if (var->nodeType == NodeType::NUMBER) {
+            if (val->getType()->isFloatingPointTy()) {
+                val = builder.CreateFPToSI(val, builder.getInt32Ty(), "castit");
+            }
+        } else if (var->nodeType == NodeType::NUMBER_DOUBLE) {
+            if (!val->getType()->isDoubleTy()) {
+                if (val->getType()->isFloatingPointTy()) {
+                    val = builder.CreateFPExt(val, builder.getDoubleTy(), "castd");
+                } else {
+                    val = builder.CreateSIToFP(val, builder.getDoubleTy(), "castd");
+                }
+            }
+        } else if (var->nodeType == NodeType::NUMBER_FLOAT) {
+            if (!val->getType()->isFloatTy()) {
+                if (val->getType()->isFloatingPointTy()) {
+                    val = builder.CreateFPTrunc(val, builder.getFloatTy(), "castf");
+                } else {
+                    val = builder.CreateSIToFP(val, builder.getFloatTy(), "castf");
+                }
+            }
+        } else if (var->nodeType == NodeType::BOOLEAN) {
+            if (!val->getType()->isIntegerTy(1)) {
+                val = builder.CreateIsNotNull(val, "boolcast");
+            }
+        }
+
+        llvm::Value* structVal = llvm::UndefValue::get(varType);
+        structVal = builder.CreateInsertValue(structVal, builder.getInt1(true), 0);
+        structVal = builder.CreateInsertValue(structVal, val, 1);
+        builder.CreateStore(structVal, var->pointer);
+        return;
+    }
+
+    if (valNode->type == NodeType::NULO) {
+        llvm::Value* nullVal = llvm::Constant::getNullValue(var->pointer->getAllocatedType());
+        builder.CreateStore(nullVal, var->pointer);
         return;
     }
 
@@ -440,6 +490,49 @@ llvm::Value* CodeGenerator::visitFunction(const ASTNode* node) {
             if (!val) continue;
 
             llvm::Type* type = val->getType();
+
+             if (type->isStructTy()) {
+                llvm::Value* hasVal = builder.CreateExtractValue(val, 0, "has_val");
+                llvm::Value* innerVal = builder.CreateExtractValue(val, 1, "inner_val");
+
+                llvm::Function* func = builder.GetInsertBlock()->getParent();
+                llvm::BasicBlock* valBB = llvm::BasicBlock::Create(context, "shout.val", func);
+                llvm::BasicBlock* nuloBB = llvm::BasicBlock::Create(context, "shout.nulo", func);
+                llvm::BasicBlock* mergeBB = llvm::BasicBlock::Create(context, "shout.merge", func);
+
+                builder.CreateCondBr(hasVal, valBB, nuloBB);
+
+                builder.SetInsertPoint(valBB);
+                std::string innerFmt;
+                llvm::Value* printVal = innerVal;
+
+                if (innerVal->getType()->isFloatTy()) {
+                    innerFmt = "%g\n";
+                    printVal = builder.CreateFPExt(innerVal, builder.getDoubleTy(), "float_promoted");
+                } else if (innerVal->getType()->isDoubleTy()) {
+                    innerFmt = "%g\n";
+                } else if (innerVal->getType()->isIntegerTy(1)) {
+                    innerFmt = "%d\n";
+                    printVal = builder.CreateZExt(innerVal, builder.getInt32Ty(), "bool_promoted");
+                } else if (innerVal->getType()->isIntegerTy()) {
+                    innerFmt = "%d\n";
+                } else if (innerVal->getType()->isPointerTy()) {
+                    innerFmt = "%s\n";
+                }
+
+                llvm::Value* fmtVal = builder.CreateGlobalString(innerFmt);
+                builder.CreateCall(printfFunc, { fmtVal, printVal });
+                builder.CreateBr(mergeBB);
+
+                builder.SetInsertPoint(nuloBB);
+                llvm::Value* fmtNulo = builder.CreateGlobalString("nulo\n");
+                builder.CreateCall(printfFunc, { fmtNulo });
+                builder.CreateBr(mergeBB);
+
+                builder.SetInsertPoint(mergeBB);
+                return nullptr;
+            }
+
             if (type->isIntegerTy(1)) {
                 format += "%d";
                 args.push_back(builder.CreateZExt(val, builder.getInt32Ty()));
@@ -462,7 +555,6 @@ llvm::Value* CodeGenerator::visitFunction(const ASTNode* node) {
         llvm::Value* fmt = builder.CreateGlobalString(format);
         args.insert(args.begin(), fmt);
         return builder.CreateCall(printfFunc, args);
-
     }
 
     llvm::Function* callee = module->getFunction(functionName);
@@ -493,23 +585,39 @@ llvm::Value* CodeGenerator::visitExpression(const ASTNode *node) {
         case NodeType::IDENTIFIER: {
             namedValuesStruct* var = lookupNamedValue(node->value);
             if (var) {
-                llvm::Type* ty;
-                if (var->nodeType == NodeType::NUMBER) {
-                    ty = builder.getInt32Ty();
-                } else if (var->nodeType == NodeType::NUMBER_DOUBLE) {
-                    ty = builder.getDoubleTy();
-                } else if (var->nodeType == NodeType::NUMBER_FLOAT) {
-                    ty = builder.getFloatTy();
-                } else if (var->nodeType == NodeType::BOOLEAN) {
-                    ty = builder.getInt1Ty();
-                } else {
-                    ty = builder.getPtrTy();
-                }
-                return builder.CreateLoad(ty, var->pointer, node->value);
+                return builder.CreateLoad(var->pointer->getAllocatedType(), var->pointer, node->value);
             }
             expect("Compile Error: variable '" + node->value + "' not found");
         }
         case NodeType::BINARY_OPERATION: {
+
+            const ASTNode* leftNode = node->children[0].get();
+            const ASTNode* rightNode = node->children[1].get();
+
+            if (node->value == "==" || node->value == "!=") {
+                bool isRightNulo = (rightNode->type == NodeType::NULO);
+                bool isLeftNulo = (leftNode->type == NodeType::NULO);
+
+                if (isRightNulo || isLeftNulo) {
+                    const ASTNode* targetNode = isRightNulo ? leftNode : rightNode;
+                    namedValuesStruct* var = lookupNamedValue(targetNode->value);
+
+                    if (var && var->isNullable) {
+                        if (var->nodeType != NodeType::STRING) {
+                            llvm::Value* structVal = builder.CreateLoad(var->pointer->getAllocatedType(), var->pointer);
+                            llvm::Value* hasVal = builder.CreateExtractValue(structVal, 0, "has_val");
+
+                            return (node->value == "!=") ? hasVal : builder.CreateNot(hasVal, "is_nulo");
+                        } else {
+                            llvm::Value* ptrVal = builder.CreateLoad(builder.getPtrTy(), var->pointer);
+                            llvm::Value* nullPtr = llvm::ConstantPointerNull::get(builder.getPtrTy());
+                            return (node->value == "!=") ? builder.CreateICmpNE(ptrVal, nullPtr): builder.CreateICmpEQ(ptrVal, nullPtr);
+                        }
+                    }
+                }
+            }
+
+
             llvm::Value* L = visitExpression(node->children[0].get());
             llvm::Value* R = visitExpression(node->children[1].get());
             if (!L || !R) return nullptr;
@@ -559,6 +667,8 @@ llvm::Value* CodeGenerator::visitExpression(const ASTNode *node) {
                 return builder.CreateSRem(L, R, "modtmp");
             }
         }
+        case NodeType::NULO:
+            return llvm::ConstantPointerNull::get(builder.getPtrTy());
         case NodeType::BOOLEAN:
             return builder.getInt1(node->value == "true");
         case NodeType::FUNCTION_CALL: {
