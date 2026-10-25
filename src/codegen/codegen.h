@@ -55,7 +55,7 @@ class CodeGenerator {
 
 
     // utils  
-
+    llvm::Value* toBool(llvm::Value* val);
     llvm::Type* getLLVMType(const std::string& typeName, bool isNullable = false);
     NodeType getNodeType(const std::string& typeName);
     void visitParameters(const ASTNode* paramsNode, llvm::Function *func);

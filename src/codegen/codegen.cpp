@@ -201,7 +201,9 @@ void CodeGenerator::visitIfStatement(const ASTNode* node) {
     llvm::Value* condVal = visitExpression(node->children[0].get());
     if (!condVal) return;
 
-    if (condVal->getType()->isFloatingPointTy()) {
+    if (condVal->getType()->isStructTy()) {
+        condVal = builder.CreateExtractValue(condVal, 0, "has_val");
+    } else if (condVal->getType()->isFloatingPointTy()) {
         condVal = builder.CreateFCmpONE(condVal, llvm::ConstantFP::get(condVal->getType(), 0.0), "ifcond");
     } else if (condVal->getType()->isIntegerTy() && !condVal->getType()->isIntegerTy(1)) {
         condVal = builder.CreateIsNotNull(condVal, "ifcond");
@@ -251,10 +253,13 @@ void CodeGenerator::visitWhileStatement(const ASTNode* node) {
     llvm::Value* condVal = visitExpression(node->children[0].get());
     if (!condVal) return;
 
-
-    if (condVal->getType()->isFloatingPointTy()) {
+    if (condVal->getType()->isStructTy()) {
+        condVal = builder.CreateExtractValue(condVal, 0, "has_val");
+    } else if (condVal->getType()->isFloatingPointTy()) {
         condVal = builder.CreateFCmpONE(condVal, llvm::ConstantFP::get(condVal->getType(), 0.0), "whilecond");
     } else if (condVal->getType()->isIntegerTy() && !condVal->getType()->isIntegerTy(1)) {
+        condVal = builder.CreateIsNotNull(condVal, "whilecond");
+    } else if (condVal->getType()->isPointerTy()) {
         condVal = builder.CreateIsNotNull(condVal, "whilecond");
     }
 
@@ -590,7 +595,6 @@ llvm::Value* CodeGenerator::visitExpression(const ASTNode *node) {
             expect("Compile Error: variable '" + node->value + "' not found");
         }
         case NodeType::BINARY_OPERATION: {
-
             const ASTNode* leftNode = node->children[0].get();
             const ASTNode* rightNode = node->children[1].get();
 
@@ -606,21 +610,44 @@ llvm::Value* CodeGenerator::visitExpression(const ASTNode *node) {
                         if (var->nodeType != NodeType::STRING) {
                             llvm::Value* structVal = builder.CreateLoad(var->pointer->getAllocatedType(), var->pointer);
                             llvm::Value* hasVal = builder.CreateExtractValue(structVal, 0, "has_val");
-
                             return (node->value == "!=") ? hasVal : builder.CreateNot(hasVal, "is_nulo");
                         } else {
                             llvm::Value* ptrVal = builder.CreateLoad(builder.getPtrTy(), var->pointer);
                             llvm::Value* nullPtr = llvm::ConstantPointerNull::get(builder.getPtrTy());
-                            return (node->value == "!=") ? builder.CreateICmpNE(ptrVal, nullPtr): builder.CreateICmpEQ(ptrVal, nullPtr);
+                            return (node->value == "!=") ? builder.CreateICmpNE(ptrVal, nullPtr) : builder.CreateICmpEQ(ptrVal, nullPtr);
                         }
                     }
                 }
             }
 
-
-            llvm::Value* L = visitExpression(node->children[0].get());
-            llvm::Value* R = visitExpression(node->children[1].get());
+            llvm::Value* L = visitExpression(leftNode);
+            llvm::Value* R = visitExpression(rightNode);
             if (!L || !R) return nullptr;
+
+            if (node->value == "and") {
+                return builder.CreateAnd(toBool(L), toBool(R), "andtmp");
+            } else if (node->value == "or") {
+                return builder.CreateOr(toBool(L), toBool(R), "ortmp");
+            }
+
+            if (node->value == "==" || node->value == "!=") {
+                bool isLBool = L->getType()->isIntegerTy(1);
+                bool isRBool = R->getType()->isIntegerTy(1);
+
+                if (isLBool || isRBool) {
+                    llvm::Value* boolL = toBool(L);
+                    llvm::Value* boolR = toBool(R);
+                    return (node->value == "==") ? builder.CreateICmpEQ(boolL, boolR, "cmptmp")
+                                                 : builder.CreateICmpNE(boolL, boolR, "cmptmp");
+                }
+            }
+
+            if (L->getType()->isStructTy()) {
+                L = builder.CreateExtractValue(L, 1, "unboxed_l");
+            }
+            if (R->getType()->isStructTy()) {
+                R = builder.CreateExtractValue(R, 1, "unboxed_r");
+            }
 
             bool isLFP = L->getType()->isFloatingPointTy();
             bool isRFP = R->getType()->isFloatingPointTy();
@@ -659,13 +686,11 @@ llvm::Value* CodeGenerator::visitExpression(const ASTNode *node) {
                 return isFP ? builder.CreateFCmpOLE(L, R, "cmptmp") : builder.CreateICmpSLE(L, R, "cmptmp");
             } else if (node->value == ">=") {
                 return isFP ? builder.CreateFCmpOGE(L, R, "cmptmp") : builder.CreateICmpSGE(L, R, "cmptmp");
-            } if (node->value == "and") {
-                return builder.CreateAnd(L, R, "andtmp");
-            } else if (node->value == "or") {
-                return builder.CreateOr(L, R, "ortmp");
             } else if (node->value == "%") {
                 return builder.CreateSRem(L, R, "modtmp");
             }
+
+            return nullptr;
         }
         case NodeType::NULO:
             return llvm::ConstantPointerNull::get(builder.getPtrTy());

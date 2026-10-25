@@ -16,6 +16,28 @@ llvm::Type* CodeGenerator::getLLVMType(const std::string& typeName, bool isNulla
     return baseType;
 }
 
+llvm::Value* CodeGenerator::toBool(llvm::Value* val) {
+    if (!val) return nullptr;
+    llvm::Type* ty = val->getType();
+
+    if (ty->isIntegerTy(1)) {
+        return val;
+    }
+    if (ty->isStructTy()) {
+        return builder.CreateExtractValue(val, 0, "has_val");
+    }
+    if (ty->isFloatingPointTy()) {
+        return builder.CreateFCmpONE(val, llvm::ConstantFP::get(ty, 0.0), "tobool");
+    }
+    if (ty->isIntegerTy()) {
+        return builder.CreateICmpNE(val, llvm::ConstantInt::get(ty, 0), "tobool");
+    }
+    if (ty->isPointerTy()) {
+        return builder.CreateIsNotNull(val, "tobool");
+    }
+    return val;
+}
+
 NodeType CodeGenerator::getNodeType(const std::string& typeName) {
      if (typeName == "int") return NodeType::NUMBER;
      if (typeName == "double") return NodeType::NUMBER_DOUBLE;
