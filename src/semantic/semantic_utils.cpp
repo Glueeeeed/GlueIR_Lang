@@ -18,6 +18,44 @@ NodeType SemanticAnalyzer::mapStringToNodeType(std::string_view typeStr) const {
     return NodeType::BOND;
 }
 
+
+std::string SemanticAnalyzer::extractNotNullVar(const ASTNode* cond) {
+    if (!cond || cond->type != NodeType::BINARY_OPERATION) return "";
+
+    if (cond->value == "!=") {
+        const ASTNode* left = cond->children[0].get();
+        const ASTNode* right = cond->children[1].get();
+
+        if (left->type == NodeType::IDENTIFIER && right->type == NodeType::NULO) {
+            return left->value;
+        }
+        if (left->type == NodeType::NULO && right->type == NodeType::IDENTIFIER) {
+            return right->value;
+        }
+    }
+
+    return "";
+}
+
+
+std::string SemanticAnalyzer::extractNullVar(const ASTNode* cond) {
+    if (!cond || cond->type != NodeType::BINARY_OPERATION) return "";
+
+    if (cond->value == "==") {
+        const ASTNode* left = cond->children[0].get();
+        const ASTNode* right = cond->children[1].get();
+
+        if (left->type == NodeType::IDENTIFIER && right->type == NodeType::NULO) {
+            return left->value;
+        }
+        if (left->type == NodeType::NULO && right->type == NodeType::IDENTIFIER) {
+            return right->value;
+        }
+    }
+
+    return "";
+}
+
 bool SemanticAnalyzer::isExprNullable(const ASTNode* node) {
     if (!node) return false;
 
@@ -97,15 +135,69 @@ void SemanticAnalyzer::visitReturn(const ASTNode* node) {
 }
 
 void SemanticAnalyzer::visitIf(const ASTNode* node) {
-    NodeType condType = inferType(node->children[0].get());
-    if (condType != NodeType::BOOLEAN && condType != NodeType::NUMBER && condType != NodeType::NUMBER_DOUBLE && condType != NodeType::NUMBER_FLOAT) {
+    const ASTNode* condNode = node->children[0].get();
+    const ASTNode* thenNode = node->children[1].get();
+    const ASTNode* elseNode = (node->children.size() > 2) ? node->children[2].get() : nullptr;
+
+    NodeType condType = inferType(condNode);
+    if (condType != NodeType::BOOLEAN && condType != NodeType::NUMBER &&
+        condType != NodeType::NUMBER_DOUBLE && condType != NodeType::NUMBER_FLOAT) {
         expect("Compile Error: If statement condition must be of type boolean or number", node->line, node->column);
     }
 
-    visit(node->children[1].get());
+    std::string notNullVar = extractNotNullVar(condNode); // x != nulo
+    std::string nullVar    = extractNullVar(condNode);    // x == nulo
 
-    if (node->children.size() > 2) {
-        visit(node->children[2].get());
+    symbolTable.enterScope();
+
+    if (!notNullVar.empty()) {
+        SymbolInfo* outerInfo = symbolTable.lookup(notNullVar);
+        if (outerInfo && outerInfo->isNullable) {
+            SymbolInfo narrowedInfo = *outerInfo;
+            narrowedInfo.isNullable = false;
+            symbolTable.declare(notNullVar, narrowedInfo);
+        }
+    }
+
+    if (thenNode->type == NodeType::BLOCK) {
+        for (const auto& child : thenNode->children) {
+            visit(child.get());
+        }
+    } else {
+        visit(thenNode);
+    }
+
+    symbolTable.exitScope();
+
+    if (elseNode) {
+        symbolTable.enterScope();
+
+        if (!nullVar.empty()) {
+            SymbolInfo* outerInfo = symbolTable.lookup(nullVar);
+            if (outerInfo && outerInfo->isNullable) {
+                SymbolInfo narrowedInfo = *outerInfo;
+                narrowedInfo.isNullable = false;
+                symbolTable.declare(nullVar, narrowedInfo);
+            }
+        }
+
+        if (elseNode->type == NodeType::BLOCK) {
+            for (const auto& child : elseNode->children) {
+                visit(child.get());
+            }
+        } else {
+            visit(elseNode);
+        }
+
+        symbolTable.exitScope();
+    }
+
+
+    if (!nullVar.empty() && hasEndingReturn(thenNode)) {
+        SymbolInfo* currentInfo = symbolTable.lookup(nullVar);
+        if (currentInfo && currentInfo->isNullable) {
+            currentInfo->isNullable = false;
+        }
     }
 }
 

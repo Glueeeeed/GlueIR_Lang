@@ -278,6 +278,8 @@ void SemanticAnalyzer::visitFunctionCall(const ASTNode* node) {
         if (node->children.size() != 2) expect("Compile Error: function '" + funcName + "' expects 2 arguments, but " + std::to_string(node->children.size()) + " were provided", node->line, node->column);
     }
 
+
+
     if (funcName == "shout" || funcName == "shin"  || funcName == "random" || funcName == "toInt" || funcName == "toFloat" || funcName == "toDouble" ) return;
 
     SymbolInfo* info = symbolTable.lookup(funcName);

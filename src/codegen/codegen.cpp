@@ -327,6 +327,9 @@ void CodeGenerator::visitDeclaration(const ASTNode *node) {
         }
     } else {
         llvm::Value* rawVal = visitExpression(valNode);
+        if (rawVal->getType()->isStructTy()) {
+            rawVal = builder.CreateExtractValue(rawVal, 1, "unboxed_val");
+        }
         builder.CreateStore(rawVal, allocaInst);
     }
 
@@ -402,6 +405,10 @@ void CodeGenerator::visitAssignment(const ASTNode *node) {
     }
 
     llvm::Value* val = visitExpression(valNode);
+
+    if (val->getType()->isStructTy()) {
+        val = builder.CreateExtractValue(val, 1, "unboxed_val");
+    }
 
     if (var->nodeType == NodeType::NUMBER) {
         if (val->getType()->isFloatingPointTy()) {
