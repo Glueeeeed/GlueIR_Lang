@@ -265,8 +265,10 @@ void SemanticAnalyzer::visitWhile(const ASTNode* node) {
 }
 
 bool SemanticAnalyzer::hasEndingReturn(const ASTNode* bodyNode) const {
-    if (bodyNode && bodyNode->type == NodeType::BLOCK && !bodyNode->children.empty()) {
-        return bodyNode->children.back()->type == NodeType::RETURN_STATEMENT;
+    if (!bodyNode) return false;
+    if (bodyNode->type == NodeType::RETURN_STATEMENT) return true;
+    if (bodyNode->type == NodeType::BLOCK && !bodyNode->children.empty()) {
+        return hasEndingReturn(bodyNode->children.back().get());
     }
     return false;
 }

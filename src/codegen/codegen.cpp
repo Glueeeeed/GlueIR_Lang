@@ -175,7 +175,12 @@ void CodeGenerator::generate(const ASTNode *node) {
                         structVal = builder.CreateInsertValue(structVal, builder.getInt1(true), 0);
                         structVal = builder.CreateInsertValue(structVal, retVal, 1);
                         builder.CreateRet(structVal);
-                    } else {
+                    }
+                    else if (!expectedRetTy->isStructTy() && retVal->getType()->isStructTy()) {
+                        llvm::Value* unboxed = builder.CreateExtractValue(retVal, 1, "unboxed_ret");
+                        builder.CreateRet(unboxed);
+                    }
+                    else {
                         builder.CreateRet(retVal);
                     }
                 }
