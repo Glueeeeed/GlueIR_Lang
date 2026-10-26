@@ -20,9 +20,17 @@ NodeType SemanticAnalyzer::mapStringToNodeType(std::string_view typeStr) const {
 
 
 std::string SemanticAnalyzer::extractNotNullVar(const ASTNode* cond) {
-    if (!cond || cond->type != NodeType::BINARY_OPERATION) return "";
+    if (!cond) return "";
 
-    if (cond->value == "!=") {
+    if (cond->type == NodeType::IDENTIFIER) {
+        SymbolInfo* info = symbolTable.lookup(cond->value);
+        if (info && info->isNullable) {
+            return cond->value;
+        }
+        return "";
+    }
+
+    if (cond->type == NodeType::BINARY_OPERATION && cond->value == "!=") {
         const ASTNode* left = cond->children[0].get();
         const ASTNode* right = cond->children[1].get();
 
@@ -51,7 +59,15 @@ std::string SemanticAnalyzer::extractNullVar(const ASTNode* cond) {
         if (left->type == NodeType::NULO && right->type == NodeType::IDENTIFIER) {
             return right->value;
         }
+
+        if (left->type == NodeType::IDENTIFIER && right->type == NodeType::BOOLEAN && right->value == "false") {
+            SymbolInfo* info = symbolTable.lookup(left->value);
+            if (info && info->isNullable) {
+                return left->value;
+            }
+        }
     }
+
 
     return "";
 }
