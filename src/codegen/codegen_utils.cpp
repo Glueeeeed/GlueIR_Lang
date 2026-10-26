@@ -56,19 +56,24 @@ void CodeGenerator::generateSrandSeed() {
     builder.CreateCall(srandFunc, { seedVal });
 }
 
-void CodeGenerator::visitParameters(const ASTNode* paramsNode,llvm::Function *func) {
+void CodeGenerator::visitParameters(const ASTNode* paramsNode, llvm::Function *func) {
     size_t idx = 0;
     for (auto& arg : func->args()) {
-         const auto& param = paramsNode->children[idx++];
+        const auto& param = paramsNode->children[idx++];
         std::string pName = param->children[0]->value;
         std::string pType = param->children[1]->value;
+        bool isNullable = false;
+        if (!pType.empty() && pType.back() == '?') {
+            isNullable = true;
+            pType.pop_back();
+        }
 
         arg.setName(pName);
 
-        llvm::Type* argLLVMType = getLLVMType(pType);
+        llvm::Type* argLLVMType = getLLVMType(pType, isNullable);
         llvm::AllocaInst* allocaInst = createEntryAlloca(func, builder, argLLVMType, pName);
         builder.CreateStore(&arg, allocaInst);
 
-        namedValuesStack.back()[pName] = { allocaInst, getNodeType(pType) };
+        namedValuesStack.back()[pName] = { allocaInst, getNodeType(pType), isNullable };
     }
 }

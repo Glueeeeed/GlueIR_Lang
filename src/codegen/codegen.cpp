@@ -58,9 +58,13 @@ void CodeGenerator::generate(const ASTNode *node) {
                                          ? node->children[0]->value
                                          : "void";
 
+            bool returnIsNullable = false;
+            if (!returnTypeName.empty() && returnTypeName.back() == '?') {
+                returnIsNullable = true;
+                returnTypeName.pop_back();
+            }
 
-
-            llvm::Type* retType = getLLVMType(returnTypeName);
+            llvm::Type* retType = getLLVMType(returnTypeName, returnIsNullable);
 
             std::vector<llvm::Type*> paramTypes;
             const ASTNode* paramsNode = (node->children.size() > 2) ? node->children[1].get() : nullptr;
@@ -68,7 +72,12 @@ void CodeGenerator::generate(const ASTNode *node) {
             if (paramsNode) {
                 for (const auto& param : paramsNode->children) {
                     std::string pType = param->children[1]->value;
-                    paramTypes.push_back(getLLVMType(pType));
+                    bool pNullable = false;
+                    if (!pType.empty() && pType.back() == '?') {
+                        pNullable = true;
+                        pType.pop_back();
+                    }
+                    paramTypes.push_back(getLLVMType(pType, pNullable));
                 }
             }
 
@@ -153,8 +162,23 @@ void CodeGenerator::generate(const ASTNode *node) {
             if (currentFunction->getName() == "main") {
                 builder.CreateBr(this->currentExitBlock);
             } else if (!node->children.empty()) {
-                llvm::Value* retVal = visitExpression(node->children[0].get());
-                builder.CreateRet(retVal);
+                const ASTNode* retExpr = node->children[0].get();
+                llvm::Type* expectedRetTy = currentFunction->getReturnType();
+
+                if (retExpr->type == NodeType::NULO) {
+                    builder.CreateRet(llvm::Constant::getNullValue(expectedRetTy));
+                } else {
+                    llvm::Value* retVal = visitExpression(retExpr);
+
+                    if (expectedRetTy->isStructTy() && !retVal->getType()->isStructTy()) {
+                        llvm::Value* structVal = llvm::UndefValue::get(expectedRetTy);
+                        structVal = builder.CreateInsertValue(structVal, builder.getInt1(true), 0);
+                        structVal = builder.CreateInsertValue(structVal, retVal, 1);
+                        builder.CreateRet(structVal);
+                    } else {
+                        builder.CreateRet(retVal);
+                    }
+                }
             } else {
                 builder.CreateRetVoid();
             }
@@ -572,14 +596,49 @@ llvm::Value* CodeGenerator::visitFunction(const ASTNode* node) {
     llvm::Function* callee = module->getFunction(functionName);
     if (!callee) {
         expect("Compile Error: function '" + functionName + "' not found");
+        return nullptr;
     }
 
     std::vector<llvm::Value*> args;
-    for (const auto& child : node->children) {
-        args.push_back(visitExpression(child.get()));
+    llvm::FunctionType* calleeType = callee->getFunctionType();
+
+    for (size_t i = 0; i < node->children.size(); ++i) {
+        const ASTNode* argNode = node->children[i].get();
+        if (!argNode) continue;
+
+        llvm::Type* expectedParamType = (i < calleeType->getNumParams())
+                                        ? calleeType->getParamType(i)
+                                        : nullptr;
+
+        llvm::Value* argVal = nullptr;
+
+        if (expectedParamType && expectedParamType->isStructTy()) {
+            if (argNode->type == NodeType::NULO) {
+                argVal = llvm::Constant::getNullValue(expectedParamType);
+            } else {
+                argVal = visitExpression(argNode);
+                if (argVal && !argVal->getType()->isStructTy()) {
+                    llvm::Value* structVal = llvm::UndefValue::get(expectedParamType);
+                    structVal = builder.CreateInsertValue(structVal, builder.getInt1(true), 0);
+                    structVal = builder.CreateInsertValue(structVal, argVal, 1);
+                    argVal = structVal;
+                }
+            }
+        }
+        else {
+            argVal = visitExpression(argNode);
+            if (argVal && expectedParamType && !expectedParamType->isStructTy() && argVal->getType()->isStructTy()) {
+                argVal = builder.CreateExtractValue(argVal, 1, "unboxed_arg");
+            }
+        }
+
+        if (argVal) {
+            args.push_back(argVal);
+        }
     }
 
     return builder.CreateCall(callee, args);
+
 }
 
 llvm::Value* CodeGenerator::visitExpression(const ASTNode *node) {
