@@ -295,31 +295,53 @@ void SemanticAnalyzer::visitFunctionCall(const ASTNode* node) {
     for (size_t i = 0; i < node->children.size(); ++i) {
         const auto* argNode = node->children[i].get();
         NodeType inferredType = inferType(argNode);
+        bool argIsNullable = isExprNullable(argNode);
         const std::string& expectedType = info->args[i];
+        bool expectedNullable = (i < info->argsNullable.size()) ? info->argsNullable[i] : false;
 
         if (!isCompatible(expectedType, inferredType)) {
             expect("Compile Error: argument " + std::to_string(i + 1) + " of function '" + funcName +
                    "' is of type " + nodeTypeToString(inferredType) + ", but expected type is '" + expectedType + "'",
                    argNode->line, argNode->column);
         }
+
+        if (!expectedNullable && argIsNullable) {
+            expect("Compile Error: cannot pass nullable value to non-nullable parameter " + std::to_string(i + 1) +
+                   " of function '" + funcName + "'", argNode->line, argNode->column);
+        }
     }
 }
 
 void SemanticAnalyzer::visitFunctionDeclaration(const ASTNode* node) {
     const std::string& funcName = node->value;
-    const std::string& returnType = node->children[0]->value;
+    std::string returnType = node->children[0]->value;
+
+    bool returnIsNullable = false;
+    if (!returnType.empty() && returnType.back() == '?') {
+        returnIsNullable = true;
+        returnType.pop_back();
+    }
 
     currentFunctionName = funcName;
     currentFunctionReturnType = returnType;
+    currentFunctionIsNullable = returnIsNullable;
 
     SymbolInfo info;
     info.type = returnType;
+    info.isNullable = returnIsNullable;
 
     const ASTNode* paramsNode = (node->children.size() > 2) ? node->children[1].get() : nullptr;
 
     if (paramsNode) {
         for (const auto& paramNode : paramsNode->children) {
-            info.args.push_back(paramNode->children[1]->value); // paramType
+            std::string pType = paramNode->children[1]->value;
+            bool pNullable = false;
+            if (!pType.empty() && pType.back() == '?') {
+                pNullable = true;
+                pType.pop_back();
+            }
+            info.args.push_back(pType);
+            info.argsNullable.push_back(pNullable);
         }
     }
 
@@ -329,13 +351,12 @@ void SemanticAnalyzer::visitFunctionDeclaration(const ASTNode* node) {
     bool isMain = (funcName == "main" || funcName == "Main");
     bool hasReturnAtEnd = hasEndingReturn(bodyNode);
 
-
     if (isMain) {
-        if (returnType != "int") {
-            expect("Compile Error: 'main' function must return type 'int'", node->line, node->column);
+        if (returnType != "int" || returnIsNullable) {
+            expect("Compile Error: 'main' function must return type 'int' (non-nullable)", node->line, node->column);
         }
         if (!hasReturnAtEnd) {
-            expect("Compile Error: Function 'main' must end with a return statement (e.g., return 0;)", node->line, node->column);
+            expect("Compile Error: Function 'main' must end with a return statement", node->line, node->column);
         }
     } else if (returnType != "void" && !hasReturnAtEnd) {
         expect("Compile Error: Function '" + funcName + "' with return type '" + returnType + "' must return a value", node->line, node->column);
@@ -344,11 +365,19 @@ void SemanticAnalyzer::visitFunctionDeclaration(const ASTNode* node) {
     symbolTable.enterScope();
 
     if (paramsNode) {
-        for (const auto& param : paramsNode->children) {
+        for (size_t i = 0; i < paramsNode->children.size(); ++i) {
+            const auto& param = paramsNode->children[i];
             const std::string& paramName = param->children[0]->value;
-            const std::string& paramType = param->children[1]->value;
+            std::string paramType = param->children[1]->value;
+            bool isParamNullable = info.argsNullable[i];
 
-            SymbolInfo paramInfo{paramType, {}, false, false};
+            if (!paramType.empty() && paramType.back() == '?') {
+                paramType.pop_back();
+            }
+
+            SymbolInfo paramInfo;
+            paramInfo.type = paramType;
+            paramInfo.isNullable = isParamNullable;
 
             if (!symbolTable.declare(paramName, paramInfo)) {
                 expect("Compile Error: redeclaration of parameter '" + paramName + "'", param->line, param->column);

@@ -142,9 +142,16 @@ void SemanticAnalyzer::visitReturn(const ASTNode* node) {
         if (node->children.empty()) {
             expect("Compile Error: Function '" + currentFunctionName + "' with return type '" + currentFunctionReturnType + "' must return a value", node->line, node->column);
         } else {
-            NodeType retType = inferType(node->children[0].get());
+            const ASTNode* exprNode = node->children[0].get();
+            NodeType retType = inferType(exprNode);
+            bool retIsNullable = isExprNullable(exprNode);
+
             if (!isCompatible(currentFunctionReturnType, retType)) {
                 expect("Compile Error: Function '" + currentFunctionName + "' with return type '" + currentFunctionReturnType + "' cannot return value of type " + nodeTypeToString(retType), node->line, node->column);
+            }
+
+            if (!currentFunctionIsNullable && retIsNullable) {
+                expect("Compile Error: cannot return nullable value from function '" + currentFunctionName + "' with non-nullable return type '" + currentFunctionReturnType + "'", node->line, node->column);
             }
         }
     }
@@ -219,14 +226,41 @@ void SemanticAnalyzer::visitIf(const ASTNode* node) {
 
 void SemanticAnalyzer::visitWhile(const ASTNode* node) {
     isWhile = 1;
-    NodeType condType = inferType(node->children[0].get());
-    if (condType != NodeType::BOOLEAN && condType != NodeType::NUMBER && condType != NodeType::NUMBER_DOUBLE && condType != NodeType::NUMBER_FLOAT) {
-        expect("Compile Error: While loop condition must be of type boolean or number", node->line, node->column);
+    const ASTNode* condNode = node->children[0].get();
+    const ASTNode* bodyNode = node->children[1].get();
+
+    NodeType condType = inferType(condNode);
+    bool isCondNullable = isExprNullable(condNode);
+
+    if (!isCondNullable && condType != NodeType::BOOLEAN && condType != NodeType::NUMBER &&
+        condType != NodeType::NUMBER_DOUBLE && condType != NodeType::NUMBER_FLOAT) {
+        expect("Compile Error: While loop condition must be of boolean, numeric, or nullable type", node->line, node->column);
+        }
+
+    std::string notNullVar = extractNotNullVar(condNode);
+
+    symbolTable.enterScope();
+
+    if (!notNullVar.empty()) {
+        SymbolInfo* outerInfo = symbolTable.lookup(notNullVar);
+        if (outerInfo && outerInfo->isNullable) {
+            SymbolInfo narrowedInfo = *outerInfo;
+            narrowedInfo.isNullable = false;
+            symbolTable.declare(notNullVar, narrowedInfo);
+        }
     }
 
     loopDepth++;
-    visit(node->children[1].get());
+    if (bodyNode->type == NodeType::BLOCK) {
+        for (const auto& child : bodyNode->children) {
+            visit(child.get());
+        }
+    } else {
+        visit(bodyNode);
+    }
     loopDepth--;
+
+    symbolTable.exitScope();
     isWhile = 0;
 }
 

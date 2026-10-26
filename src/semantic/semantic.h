@@ -10,6 +10,7 @@ class SemanticAnalyzer {
     Scope symbolTable;
     std::unordered_map<std::string, SymbolInfo> symbols;
     std::string currentFunctionReturnType;
+    bool currentFunctionIsNullable;
     std::string currentFunctionName;
     int loopDepth = 0;
     int isWhile = 0;

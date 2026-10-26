@@ -8,6 +8,7 @@
 struct SymbolInfo {
     std::string type;
     std::vector<std::string> args;
+    std::vector<bool> argsNullable;
     bool isConst = false;
     bool isSticky = false;
     bool isNullable = false;
