@@ -14,7 +14,7 @@ func int generateRandomNumber(int a, int b) {
 
 func int main() {
 
-   
+
 
     // Player starts with 3 lives
     int lives = 3;
