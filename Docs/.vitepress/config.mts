@@ -21,7 +21,8 @@ export default defineConfig({
             { text: 'Getting Started & Installation', link: '/guide/getting-started' },
             { text: 'Syntax, Types & Mutability', link: '/guide/syntax-and-types' },
             { text: 'Control Flow & Conditions', link: '/guide/control-flow' },
-            { text: 'Functions & I/O', link: '/guide/functions-and-io' }
+            { text: 'Functions & I/O', link: '/guide/functions-and-io' },
+            { text: 'Null Safety & Type Narrowing', link: '/guide/null-safety' }
           ]
         }
       ],

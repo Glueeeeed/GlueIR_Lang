@@ -14,8 +14,7 @@ func int generateRandomNumber(int a, int b) {
 
 func int main() {
 
-    // Loop control flag
-    boolean isEnd = false;
+   
 
     // Player starts with 3 lives
     int lives = 3;
@@ -23,8 +22,8 @@ func int main() {
     // Pick a random number between 1 and 50
     int number = generateRandomNumber(1, 50);
 
-    // Game loop — runs until the player wins or runs out of lives
-    while (!isEnd) {
+    // Game loop runs until the player wins or runs out of lives
+    while (true) {
 
         shout("Enter number: ");
 
@@ -33,12 +32,12 @@ func int main() {
 
         if (lives <= 0) {
             shout("Game over!");
-            isEnd = true;
+            fin; // fin ends loop
         }
 
         if (result == number) {
             shout("Correct! Guessed number is ", result);
-            isEnd = true;
+            fin;
         } else {
             lives = lives - 1;
 
